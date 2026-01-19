@@ -1,0 +1,29 @@
+# Julia artifacts
+*.jl.cov
+*.jl.mem
+Manifest.toml
+
+# Cache directories
+.cache/
+
+# Build artifacts
+deps/build.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Results (keep structure, ignore data)
+results/*.jld2
+results/*.csv
+
+# Local environment
+.envrc
