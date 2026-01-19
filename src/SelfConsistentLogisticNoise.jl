@@ -37,12 +37,13 @@ include("sc/io.jl")
 include("sc/diagnostics.jl")
 
 # Exports
-export LogisticMap, GaussianNoise, FourierDisc
+export LogisticMap, GaussianNoise, FourierDisc, rhohat
 export Observable, CosineObservable, Coupling
 export LinearCoupling, TanhCoupling
 export SCProblem
 export modes, idx, mode
 export build_B, apply_Pc, compute_m
+export get_observable, get_delta
 export solve_fixed_point, solve_newton, solve_hybrid, FixedPointResult
 export sweep_delta, sweep_delta_a
 export reconstruct_density
