@@ -7,6 +7,7 @@ using FFTW
 using JLD2
 using DataFrames
 using CSV
+using BallArithmetic
 
 # Fourier indexing utilities
 include("sc/indexing.jl")
@@ -31,6 +32,9 @@ include("sc/sweeps.jl")
 # I/O utilities
 include("sc/io.jl")
 
+# Rigorous diagnostics (Newton-Kantorovich verification)
+include("sc/diagnostics.jl")
+
 # Exports
 export LogisticMap, GaussianNoise, FourierDisc
 export Observable, CosineObservable, Coupling
@@ -42,5 +46,10 @@ export solve_fixed_point, FixedPointResult
 export sweep_delta, sweep_delta_a
 export reconstruct_density
 export save_result, load_result
+
+# Rigorous verification exports
+export GaussianConstants, compute_gaussian_constants
+export RigorousResult, verify_fixed_point
+export compute_jacobian_matrix
 
 end # module
