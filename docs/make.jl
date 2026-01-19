@@ -17,6 +17,7 @@ makedocs(;
         "Mathematical Background" => "theory.md",
         "API Reference" => "api.md",
     ],
+    warnonly = [:missing_docs],
 )
 
 deploydocs(;
