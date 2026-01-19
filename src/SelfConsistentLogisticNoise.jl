@@ -23,8 +23,9 @@ include("sc/coupling.jl")
 include("sc/operator_build.jl")
 include("sc/operator_apply.jl")
 
-# Fixed-point solver
+# Fixed-point solvers
 include("sc/solver_picard.jl")
+include("sc/solver_newton.jl")
 
 # Sweeps and parameter studies
 include("sc/sweeps.jl")
@@ -42,7 +43,7 @@ export LinearCoupling, TanhCoupling
 export SCProblem
 export modes, idx, mode
 export build_B, apply_Pc, compute_m
-export solve_fixed_point, FixedPointResult
+export solve_fixed_point, solve_newton, solve_hybrid, FixedPointResult
 export sweep_delta, sweep_delta_a
 export reconstruct_density
 export save_result, load_result
