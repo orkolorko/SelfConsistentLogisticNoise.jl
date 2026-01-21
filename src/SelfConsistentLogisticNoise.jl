@@ -37,6 +37,9 @@ include("sc/io.jl")
 # Rigorous diagnostics (Newton-Kantorovich verification)
 include("sc/diagnostics.jl")
 
+# Krawczyk CAP verification
+include("sc/krawczyk.jl")
+
 # ============================================================================
 # Annealed transfer operator (taper + smoothing)
 # ============================================================================
@@ -77,6 +80,13 @@ export GaussianConstants, compute_gaussian_constants
 export RigorousResult, verify_fixed_point
 export compute_jacobian_matrix
 
+# Krawczyk CAP verification exports
+export embed_perp, project_perp, perp_index, perp_mode
+export compute_F_perp, compute_J_perp_matrix, compute_J_perp_ball
+export compute_jacobian_lipschitz
+export KrawczykResult, certify_krawczyk
+export CAPResult, verify_fixed_point_CAP, print_CAP_certificate
+
 # Annealed transfer operator exports (Taper)
 export smoothstep, smoothstep_quintic, smoothstep_septic
 export taper_window
@@ -115,7 +125,7 @@ export AnalyticStripConstants, compute_analytic_strip_constants
 export bound_analytic_to_L2_projection
 export OperatorErrorBounds, compute_operator_error_bounds
 export print_operator_error_summary
-export BallMatrix, to_ball_matrix, operator_norm_ball
+export to_ball_matrix, operator_norm_ball
 export OperatorCertificate, certify_operator, print_certificate
 
 # Annealed transfer operator exports (RigorousAssembly)

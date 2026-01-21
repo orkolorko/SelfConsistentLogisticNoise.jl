@@ -1,7 +1,7 @@
 # Rigorous diagnostics for Newton-Kantorovich verification
 # Based on Corollary 1 from the theory document
 
-using BallArithmetic
+using BallArithmetic: Ball, BallMatrix, mid, rad, svd_bound_L2_opnorm_inverse
 
 export GaussianConstants, compute_gaussian_constants
 export RigorousResult, verify_fixed_point

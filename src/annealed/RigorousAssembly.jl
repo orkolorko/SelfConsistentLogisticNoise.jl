@@ -46,6 +46,7 @@ function assemble_PN_rigorous(Ttilde_ball::Vector{<:Ball}, N::Int,
 
     # Constants
     π_ball = Ball(π)
+    im_ball = Ball(0.0 + 1.0im)  # Complex Ball for imaginary unit
 
     for k in -N:N
         if verbose && (k + N) % 20 == 0
@@ -54,7 +55,8 @@ function assemble_PN_rigorous(Ttilde_ball::Vector{<:Ball}, N::Int,
 
         # Compute g_k samples: exp(-iπk T̃(y)) with Ball arithmetic
         # g_k(y_j) = exp(-iπk T̃(y_j))
-        gk = [exp(-im * π_ball * k * Ttilde_ball[j]) for j in 1:M]
+        # Note: use complex Ball arithmetic throughout
+        gk = [exp(-im_ball * π_ball * k * Ttilde_ball[j]) for j in 1:M]
 
         # Rigorous FFT using BallArithmetic
         # BallArithmetic provides rigorous_fft for complex Ball vectors

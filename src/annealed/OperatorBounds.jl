@@ -10,6 +10,7 @@
 
 using IntervalArithmetic
 using LinearAlgebra
+using BallArithmetic: Ball, BallMatrix, BallVector, mid, rad, upper_bound_L2_opnorm
 
 """
     bound_operator_map_sensitivity(σ_rds, map_sup_error)
@@ -298,30 +299,17 @@ function assemble_PN_fft_bigfloat(Ttilde_samples::Vector{BigFloat}, N::Int, σ_r
 end
 
 # ============================================================================
-# Ball arithmetic for rigorous matrix entries
+# Ball arithmetic for rigorous matrix entries (using BallArithmetic.jl)
 # ============================================================================
-
-"""
-    BallMatrix
-
-Matrix with rigorous error bounds stored as balls.
-
-# Fields
-- `midpoints`: Matrix of midpoint values (Float64)
-- `radii`: Matrix of radius bounds (Float64)
-"""
-struct BallMatrix
-    midpoints::Matrix{ComplexF64}
-    radii::Matrix{Float64}
-end
 
 """
     to_ball_matrix(P, radius)
 
 Convert a complex matrix to a BallMatrix with uniform radius.
+Uses BallArithmetic.jl's BallMatrix type.
 """
 function to_ball_matrix(P::Matrix{ComplexF64}, radius::Real)
-    return BallMatrix(P, fill(Float64(radius), size(P)))
+    return BallMatrix([Ball(P[i,j], radius) for i in 1:size(P,1), j in 1:size(P,2)])
 end
 
 """
@@ -330,26 +318,16 @@ end
 Create BallMatrix from midpoints and entry-wise radii.
 """
 function to_ball_matrix(P_mid::Matrix{ComplexF64}, P_rad::Matrix{<:Real})
-    return BallMatrix(P_mid, Float64.(P_rad))
+    return BallMatrix([Ball(P_mid[i,j], P_rad[i,j]) for i in 1:size(P_mid,1), j in 1:size(P_mid,2)])
 end
 
 """
     operator_norm_ball(B::BallMatrix)
 
-Compute rigorous bound on operator norm ||P||.
-
-Uses: ||P|| ≤ ||P_mid|| + ||P_rad||_∞ · dim
-(crude bound; can be improved with interval SVD)
+Compute rigorous bound on operator norm ||P||₂ using BallArithmetic's method.
 """
 function operator_norm_ball(B::BallMatrix)
-    # Operator norm of midpoints (spectral norm)
-    mid_norm = opnorm(B.midpoints)
-
-    # Perturbation bound from radii
-    dim = size(B.midpoints, 1)
-    rad_contrib = maximum(B.radii) * dim
-
-    return mid_norm + rad_contrib
+    return upper_bound_L2_opnorm(B)
 end
 
 # ============================================================================
@@ -424,5 +402,5 @@ export bound_analytic_to_L2_projection
 export OperatorErrorBounds, compute_operator_error_bounds
 export print_operator_error_summary
 export estimate_numerical_error_bigfloat, assemble_PN_fft_bigfloat
-export BallMatrix, to_ball_matrix, operator_norm_ball
+export to_ball_matrix, operator_norm_ball
 export OperatorCertificate, certify_operator, print_certificate

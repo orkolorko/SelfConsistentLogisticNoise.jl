@@ -1,0 +1,1721 @@
+\documentclass[11pt]{article}
+
+% ------------------------------------------------------------
+% Packages
+% ------------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=3cm}
+
+% ------------------------------------------------------------
+% Theorem environments
+% ------------------------------------------------------------
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+% ------------------------------------------------------------
+% Notation
+% ------------------------------------------------------------
+\newcommand{\Id}{\mathrm{Id}}
+\newcommand{\Lip}{\mathrm{Lip}}
+\newcommand{\Bs}{\mathcal{B}_s}
+\newcommand{\Bw}{\mathcal{B}_w}
+\newcommand{\norms}[1]{\left\|#1\right\|_s}
+\newcommand{\normw}[1]{\left\|#1\right\|_w}
+
+\newcommand{\cH}{\mathcal{H}} % constraint hyperplane
+\newcommand{\E}{\mathcal{E}}  % kernel space
+
+% Operator norms
+\newcommand{\opnormsw}[1]{\left\|#1\right\|_{s\to w}}
+\newcommand{\opnormww}[1]{\left\|#1\right\|_{w\to w}}
+\newcommand{\opnormws}[1]{\left\|#1\right\|_{w\to s}}
+
+\title{Two-norm a posteriori bounds for normalized fixed points:
+bias + Newton--Kantorovich}
+\author{Stefano Galatolo and Isaia Nisoli}
+\date{}
+
+%------------------------------------------------------------
+% Extra macros needed by the expanded Gaussian-coupled section
+%------------------------------------------------------------
+\newcommand{\C}{\mathbb C}
+\newcommand{\R}{\mathbb R}
+\newcommand{\T}{\mathbb T}
+\newcommand{\cHat}{\widehat}
+\begin{document}
+\maketitle
+
+%============================================================
+\section{Setting: weak--strong scale and normalized fixed points}
+%============================================================
+
+Let $\Bs\subset \Bw$ be Banach spaces with continuous embedding:
+\[
+\normw{u}\le \norms{u}\qquad (u\in \Bs).
+\]
+\noindent Here one may take $C_T:=\|\bar\rho_\sigma\|_2$, $C_J:=\|\bar\rho_\sigma'\|_2$, and $C_J^{(2)}:=\|\bar\rho_\sigma''\|_2$; see Appendix~\ref{app:gaussian-constants}.
+
+Fix a nonzero bounded linear functional $\ell\in(\Bw)^\ast$ and define
+\[
+\cH:=\{f\in\Bw:\ \ell(f)=1\},\qquad
+\E:=\ker\ell=\{h\in\Bw:\ \ell(h)=0\},\qquad
+\E_s:=\E\cap\Bs.
+\]
+Let $U\subset\Bw$ be open and let $T,T_N:U\to\Bw$ be (possibly nonlinear) maps.
+
+\begin{assumption}[Constraint invariance]\label{ass:inv}
+For all $f\in U\cap\cH$ we have $\ell(T(f))=\ell(f)$ and $\ell(T_N(f))=\ell(f)$.
+Equivalently, $T(\cH\cap U)\subset\cH$ and $T_N(\cH\cap U)\subset\cH$.
+\end{assumption}
+
+Define residuals
+\[
+\Phi(f):=f-T(f),\qquad \Phi_N(f):=f-T_N(f).
+\]
+By Assumption~\ref{ass:inv}, $\Phi(f),\Phi_N(f)\in\E$ whenever $f\in\cH\cap U$.
+
+We will work on the affine slice $\tilde f_N+\E$ around a candidate $\tilde f_N\in\cH\cap U\cap \Bs$.
+For $u\in\E_s$ with $\tilde f_N+u\in U$, set
+\[
+F(u):=\Phi(\tilde f_N+u)\in\E,\qquad
+F_N(u):=\Phi_N(\tilde f_N+u)\in\E.
+\]
+
+%============================================================
+\section{Two-stage a posteriori bound: bias + Newton--Kantorovich}
+%============================================================
+
+\subsection{Stage 1: NK for $T_N$ gives a contraction and a certified discrete fixed point}
+
+Recall that we work on the constraint slice $\tilde f_N+\E$ (so $\ell(\tilde f_N+u)=1$ iff $u\in\E$),
+and set
+\[
+F(u):=\Phi(\tilde f_N+u)=\tilde f_N+u-T(\tilde f_N+u)\in \E,\qquad
+F_N(u):=\Phi_N(\tilde f_N+u)=\tilde f_N+u-T_N(\tilde f_N+u)\in \E.
+\]
+Assume $T_N$ preserves the constraint so that $F_N(u)\in\E$ whenever $u\in\E$.
+
+Define the base Jacobian on $\E$:
+\[
+J_{N,0}:=\bigl(\Id-DT_N(\tilde f_N)\bigr)\big|_{\E}:\E\to\E,
+\qquad
+A_N:=J_{N,0}^{-1}:\E\to\E,
+\]
+whenever $J_{N,0}$ is invertible.
+Define the base-preconditioned NK map on $\E$:
+\[
+\mathcal G_N(u):=u-A_NF_N(u).
+\]
+Note: $F_N(u)=0$ iff $\mathcal G_N(u)=u$, and then $f_N:=\tilde f_N+u$ satisfies $T_N(f_N)=f_N$.
+
+\begin{assumption}[Weak Lipschitz control of $DT_N$ on a weak ball]\label{ass:lipTN-ww}
+There exist $\gamma_N\ge 0$ and $R>0$ such that for all $u,v\in \E$ with
+$\|u\|_w,\|v\|_w\le R$ and $\tilde f_N+u,\tilde f_N+v\in U$,
+\[
+\opnormww{\,DT_N(\tilde f_N+u)-DT_N(\tilde f_N+v)\,}\ \le\ \gamma_N\,\|u-v\|_w .
+\]
+\end{assumption}
+
+\begin{theorem}[NK contraction for $T_N$ (weak-only form)]\label{thm:NK-TN-ww}
+Assume:
+\begin{enumerate}
+\item $J_{N,0}$ is invertible and $M_N:=\opnormww{A_N}<\infty$.
+\item Assumption~\ref{ass:lipTN-ww} holds with constants $\gamma_N,R$.
+\item Residual at the base: $\delta_N:=\|F_N(0)\|_w=\|\Phi_N(\tilde f_N)\|_w$ is known.
+\item Smallness:
+\[
+2M_N^2\,\gamma_N\,\delta_N\le 1.
+\]
+Define the Kantorovich radius
+\[
+r_N :=
+\frac{1-\sqrt{1-2M_N^2\gamma_N\,\delta_N}}{M_N\gamma_N},
+\qquad
+(\text{interpret }r_N:=M_N\delta_N\text{ if }\gamma_N=0),
+\]
+and assume $r_N\le R$.
+\end{enumerate}
+Then $\mathcal G_N$ maps the closed ball $\overline{B_w(0,r_N)}\subset\E$ into itself and is a strict contraction there:
+\[
+\|\mathcal G_N(u)-\mathcal G_N(v)\|_w \le \kappa_N\,\|u-v\|_w
+\qquad(u,v\in \overline{B_w(0,r_N)}),
+\]
+with contraction factor
+\[
+\kappa_N := M_N\gamma_N\,r_N = 1-\sqrt{1-2M_N^2\gamma_N\,\delta_N}\in(0,1).
+\]
+Consequently, $F_N(u)=0$ has a unique solution $u_N\in \overline{B_w(0,r_N)}$, and
+$f_N:=\tilde f_N+u_N$ satisfies
+\[
+T_N(f_N)=f_N,\qquad \ell(f_N)=1,\qquad \|f_N-\tilde f_N\|_w=\|u_N\|_w\le r_N.
+\]
+\end{theorem}
+
+\begin{proof}
+Fix $u,v$ with $\|u\|_w,\|v\|_w\le r_N\le R$.
+Using the integral remainder identity (see Lemma~\ref{lem:int-remainder} in Section~\ref{sec:relaxFrechet}),
+\[
+F_N(u)-F_N(v)=\int_0^1 DF_N(v+t(u-v))(u-v)\,dt,
+\qquad
+DF_N(w)=\Id-DT_N(\tilde f_N+w).
+\]
+Hence
+\[
+\mathcal G_N(u)-\mathcal G_N(v)
+=(u-v)-A_N(F_N(u)-F_N(v))
+=
+A_N\int_0^1 (DF_N(v+t(u-v))-DF_N(0))(u-v)\,dt.
+\]
+Taking $\|\cdot\|_w$ norms and using $\|A_N\|_{w\to w}\le M_N$,
+\[
+\|\mathcal G_N(u)-\mathcal G_N(v)\|_w
+\le
+M_N\int_0^1
+\|DT_N(\tilde f_N+v+t(u-v))-DT_N(\tilde f_N)\|_{w\to w}\,\|u-v\|_w\,dt.
+\]
+By Assumption~\ref{ass:lipTN-ww}, the operator difference is
+$\le \gamma_N\|v+t(u-v)\|_w\le \gamma_N r_N$.
+Thus
+\[
+\|\mathcal G_N(u)-\mathcal G_N(v)\|_w \le (M_N\gamma_N r_N)\,\|u-v\|_w=\kappa_N\|u-v\|_w.
+\]
+Ball invariance follows from the standard Kantorovich quadratic estimate:
+for $\|u\|_w\le r_N$,
+\[
+\|\mathcal G_N(u)\|_w\le M_N\delta_N+\frac{M_N\gamma_N}{2}\|u\|_w^2
+\le M_N\delta_N+\frac{M_N\gamma_N}{2}r_N^2=r_N,
+\]
+because $r_N$ is the smallest root of the majorant polynomial.
+Banach's fixed point theorem yields the unique fixed point $u_N$ and $\|u_N\|_w\le r_N$.
+\end{proof}
+
+\subsection{Alternative CAP-method, using Krawczyk}
+
+\begin{theorem}[Krawczyk / preconditioned Newton contraction for $T_N$]\label{thm:Krawczyk-TN}
+Assume $F_N:\E\to\E$ is Fr\'echet differentiable on the weak ball
+$X=\overline{B_w(0,r)}\subset \E$.
+Let $A_N:\E\to\E$ be a bounded linear operator and set
+$\mathcal G_N(u):=u-A_NF_N(u)$.
+Assume the following quantities are known:
+\begin{align*}
+Y_N &:= \|A_NF_N(0)\|_w,\\
+Z_N &\ge \sup_{u\in X}\ \opnormww{\Id - A_N DF_N(u)}.
+\end{align*}
+If $Z_N<1$ and $Y_N\le (1-Z_N)\,r$, then:
+\begin{enumerate}
+\item $\mathcal G_N(X)\subseteq X$;
+\item $\mathcal G_N$ is a strict contraction on $X$ with factor $Z_N$:
+\[
+\|\mathcal G_N(u)-\mathcal G_N(v)\|_w \le Z_N\|u-v\|_w \quad (u,v\in X);
+\]
+\item there exists a unique $u_N\in X$ with $F_N(u_N)=0$; hence
+$f_N:=\tilde f_N+u_N$ satisfies $T_N(f_N)=f_N$ and $\ell(f_N)=1$, with
+$\|u_N\|_w\le r$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+For $u,v\in X$,
+\[
+\mathcal G_N(u)-\mathcal G_N(v)
+=\int_0^1 \bigl(\Id-A_NDF_N(v+t(u-v))\bigr)\,(u-v)\,dt.
+\]
+Taking $\|\cdot\|_w$ and using the definition of $Z_N$ gives the contraction bound.
+Moreover,
+\[
+\|\mathcal G_N(u)\|_w \le \|\mathcal G_N(0)\|_w + Z_N\|u\|_w
+= Y_N + Z_N\|u\|_w \le Y_N+Z_N r \le r,
+\]
+so $\mathcal G_N(X)\subseteq X$.
+Banach's theorem yields the unique fixed point $u_N\in X$, which satisfies $F_N(u_N)=0$.
+\end{proof}
+
+
+%------------------------------------------------------------
+\subsection{Stage 2: discretization bias $\|f-f_N\|_w$ from the NK contraction
+(using a uniform Lasota--Yorke bound for $T$)}
+%------------------------------------------------------------
+
+Recall the base-preconditioned maps (same preconditioner $A_N$):
+\[
+\mathcal G_N(u):=u-A_NF_N(u),\qquad
+\mathcal G(u):=u-A_NF(u),
+\]
+where $F_N(u)=\Phi_N(\tilde f_N+u)$ and $F(u)=\Phi(\tilde f_N+u)$.
+
+Let
+\[
+D:=\overline{B_w(0,r_N)}\cap\E
+\]
+be the NK ball from Theorem~\ref{thm:NK-TN-ww}, and let $u_N\in D$ be the unique fixed point of
+$\mathcal G_N$ (equivalently $f_N:=\tilde f_N+u_N$ is the unique fixed point of $T_N$ in $\tilde f_N+D$).
+
+%------------------------------------------------------------
+\subsubsection*{(A) Pointwise telescoping (no $\sup_{u\in D}$ required)}
+%------------------------------------------------------------
+
+\begin{lemma}[Pointwise telescoping bound]\label{lem:telescope-pointwise}
+Assume:
+\begin{enumerate}
+\item $\mathcal G_N:D\to D$ is a contraction in $\|\cdot\|_w$ with constant $\kappa_N\in[0,1)$
+and has a fixed point $u_N\in D$;
+\item $\mathcal G$ has a fixed point $u\in D$.
+\end{enumerate}
+Then
+\[
+\|u-u_N\|_w\ \le\ \frac{\|\mathcal G(u)-\mathcal G_N(u)\|_w}{1-\kappa_N}.
+\]
+\end{lemma}
+
+\begin{proof}
+Using $\mathcal G(u)=u$ and $\mathcal G_N(u_N)=u_N$,
+\[
+\|u-u_N\|_w=\|\mathcal G(u)-\mathcal G_N(u_N)\|_w
+\le \|\mathcal G(u)-\mathcal G_N(u)\|_w + \|\mathcal G_N(u)-\mathcal G_N(u_N)\|_w
+\le \|\mathcal G(u)-\mathcal G_N(u)\|_w + \kappa_N\|u-u_N\|_w.
+\]
+Rearrange.
+\end{proof}
+
+%------------------------------------------------------------
+\subsubsection*{(B) $s\to w$ discretization control for the map}
+%------------------------------------------------------------
+
+\begin{assumption}[$s\to w$ discretization bound for $T-T_N$]\label{ass:map-sw}
+There exists a constant $\varepsilon_N\ge 0$ such that for all $g$ in the relevant domain
+(with $g\in\Bs$),
+\[
+\|T(g)-T_N(g)\|_w \ \le\ \varepsilon_N\,\|g\|_s.
+\]
+Equivalently, $\varepsilon_N=\|T-T_N\|_{s\to w}$ on that domain.
+\end{assumption}
+
+\begin{lemma}[Mismatch at the true fixed point]\label{lem:mismatch-at-true-fp}
+Assume Assumption~\ref{ass:map-sw}. Let $u\in D$ be a fixed point of $\mathcal G$ and set
+$f:=\tilde f_N+u$. Then
+\[
+\|\mathcal G(u)-\mathcal G_N(u)\|_w
+=
+\bigl\|A_N\bigl(T(f)-T_N(f)\bigr)\bigr\|_w
+\ \le\
+\opnormww{A_N}\,\varepsilon_N\,\|f\|_s.
+\]
+\end{lemma}
+
+\begin{proof}
+Since $\mathcal G(u)-\mathcal G_N(u)=A_N\bigl(T(\tilde f_N+u)-T_N(\tilde f_N+u)\bigr)$,
+apply the operator norm bound and Assumption~\ref{ass:map-sw}.
+\end{proof}
+
+%------------------------------------------------------------
+\subsubsection*{(C) Uniform Lasota--Yorke for $T$ yields a strong bound for fixed points}
+%------------------------------------------------------------
+
+\begin{assumption}[Uniform Lasota--Yorke for $T$ on the invariant slice]\label{ass:LY-T-uniform}
+There exist constants $a\in[0,1)$ and $b\ge 0$ such that for all $g$ in the relevant domain
+(e.g.\ $g\in U\cap\cH$ and $T(g)\in\Bs$),
+\[
+\|T(g)\|_s \le a\,\|g\|_s + b\,\|g\|_w.
+\]
+\end{assumption}
+
+\begin{lemma}[Fixed point strong bound from Lasota--Yorke]\label{lem:LY-fp-strong}
+Assume Assumption~\ref{ass:LY-T-uniform}.
+If $f$ is a fixed point of $T$ (i.e.\ $T(f)=f$) and $f\in\Bs$, then
+\[
+\|f\|_s \le \frac{b}{1-a}\,\|f\|_w.
+\]
+If moreover $\|f\|_w\le W$ is known a priori on the invariant slice, then $\|f\|_s\le \frac{b}{1-a}W$.
+\end{lemma}
+
+\begin{proof}
+From $f=T(f)$ and the Lasota--Yorke inequality:
+\[
+\|f\|_s=\|T(f)\|_s\le a\|f\|_s+b\|f\|_w,
+\]
+hence $(1-a)\|f\|_s\le b\|f\|_w$.
+\end{proof}
+
+\begin{remark}[Why this is the right hypothesis in the coupled/Gaussian setting]
+In many self-consistent transfer operator couplings (including the Galatolo--Tanzi framework
+and Gaussian-noise regularization), Assumption~\ref{ass:LY-T-uniform} holds uniformly on the invariant slice,
+and the fixed point is automatically in $\Bs$ (regularization). In that case, the lemma applies
+without any ``local bridge'' assumption and without using any finite-dimensional constant $B_N$.
+\end{remark}
+
+%------------------------------------------------------------
+\subsubsection*{(D) Bias theorem (no $B_N$ anywhere in Stage 2)}
+%------------------------------------------------------------
+
+\begin{theorem}[Bias bound $\|f-f_N\|_w$ using $s\to w$ discretization + Lasota--Yorke]\label{thm:bias-LY}
+Assume Theorem~\ref{thm:NK-TN-ww} and let $u_N\in D$ be the unique fixed point of $\mathcal G_N$.
+Assume that $T$ has a normalized fixed point $f$ with $u:=f-\tilde f_N\in D$.
+Assume Assumptions~\ref{ass:map-sw} and \ref{ass:LY-T-uniform}, and suppose an a priori weak bound
+$\|f\|_w\le W$ is available on the invariant slice.
+Then
+\[
+\|f-f_N\|_w=\|u-u_N\|_w
+\ \le\
+\frac{1}{1-\kappa_N}\,\opnormww{A_N}\,\varepsilon_N\,\|f\|_s
+\ \le\
+\frac{1}{1-\kappa_N}\,\opnormww{A_N}\,\varepsilon_N\,\frac{b}{1-a}\,W.
+\]
+\end{theorem}
+
+\begin{proof}
+Combine Lemma~\ref{lem:telescope-pointwise} with Lemma~\ref{lem:mismatch-at-true-fp}, then apply
+Lemma~\ref{lem:LY-fp-strong}.
+\end{proof}
+
+\begin{corollary}[Two-stage a posteriori bound to $\tilde f_N$]\label{cor:two-stage-LY}
+Under the hypotheses of Theorem~\ref{thm:NK-TN-ww} and Theorem~\ref{thm:bias-LY},
+\[
+\|f-\tilde f_N\|_w
+\le
+\|f-f_N\|_w+\|f_N-\tilde f_N\|_w
+\le
+\frac{\opnormww{A_N}}{1-\kappa_N}\,\varepsilon_N\,\frac{b}{1-a}\,W
+\;+\; r_N.
+\]
+\end{corollary}
+
+\begin{remark}[About $W$]
+In many applications $W$ is explicit from normalization/positivity (e.g.\ if $\|\cdot\|_w=\|\cdot\|_{L^1}$
+and $\ell(f)=\int f=1$, then $W=1$). In other weak norms (e.g.\ $L^2$), one needs a separate a priori
+bound on $\|f\|_w$ on the invariant slice; this is independent of any finite-dimensional bridge constant.
+\end{remark}
+
+
+%============================================================
+\section{Application: coupled random dynamical systems with Gaussian noise}
+\label{sec:gaussian-coupled}
+%============================================================
+
+\subsection{General mean-field coupling on $\mathbb T$}
+
+Let $\mathbb T=\mathbb R/\mathbb Z$ and let $T_0:\mathbb T\to\mathbb T$ be a measurable map.
+Let $\bar\rho_\sigma$ be the $1$-periodized Gaussian kernel of variance $\sigma^2>0$,
+so $\bar\rho_\sigma\ge 0$ and $\int_{\mathbb T}\bar\rho_\sigma=1$.
+
+For $c\in\mathbb T$, define the noisy transfer operator
+\[
+(P_c f)(x):=\int_{\mathbb T}\bar\rho_\sigma\!\bigl(x-T_0(y)-c\bigr)\,f(y)\,dy.
+\]
+This is the annealed transfer operator for the RDS
+\[
+X_{n+1}=T_0(X_n)+c+\sigma\,\xi_n \pmod 1,
+\qquad \xi_n\sim\mathcal N(0,1)\ \text{i.i.d.}
+\]
+
+We introduce a self-consistent (mean-field) coupling by setting
+\[
+m(f):=\langle \phi,f\rangle=\int_{\mathbb T}\phi(x)\,f(x)\,dx,
+\qquad
+c(f):=\delta\,G(m(f)),
+\]
+where $\phi:\mathbb T\to\mathbb R$ is an observable, $G:\mathbb R\to\mathbb R$ is Lipschitz,
+and $\delta\in\mathbb R$ is the coupling strength.
+Define the self-consistent map
+\[
+T(f):=P_{c(f)}f.
+\]
+A normalized fixed point $f^\ast$ (with $\ell(f^\ast)=\int_{\mathbb T} f^\ast=1$) is a stationary law
+for the coupled RDS
+\[
+X_{n+1}=T_0(X_n)+\delta\,G\!\bigl(m(f_n)\bigr)+\sigma\,\xi_n \pmod 1,
+\qquad f_{n+1}=T(f_n).
+\]
+
+\subsection{Two norms: analytic strong space and $L^2$ weak space}
+
+Fix $\tau>0$ and let $\mathcal A_\tau$ be the analytic strip space on $\mathbb T$
+(e.g.\ Fourier-weighted $\ell^2$ with weight $e^{2\pi\tau|k|}$), and let $L^2$ be the weak space.
+Write
+\[
+\|\,\cdot\,\|_s:=\|\,\cdot\,\|_{\mathcal A_\tau},\qquad \|\,\cdot\,\|_w:=\|\,\cdot\,\|_2.
+\]
+
+Gaussian noise gives a smoothing estimate (uniform in $c$):
+\[
+\|P_c f\|_{\mathcal A_\tau}\ \le\ S_{\tau,\sigma}\,\|f\|_2,
+\qquad
+\|\partial_c P_c f\|_{\mathcal A_\tau}\ \le\ S^{(1)}_{\tau,\sigma}\,\|f\|_2,
+\qquad
+\|\partial_c^2 P_c f\|_{\mathcal A_\tau}\ \le\ S^{(2)}_{\tau,\sigma}\,\|f\|_2,
+\]
+with explicit constants $S_{\tau,\sigma},S^{(1)}_{\tau,\sigma},S^{(2)}_{\tau,\sigma}$ (Fourier multipliers).
+
+Moreover, $P_c$ is Markov on $L^1$ and satisfies a weak bound on densities:
+for $\|f\|_1=1$,
+\[
+\|P_c f\|_\infty\le \|\bar\rho_\sigma\|_\infty,
+\qquad
+\|P_c f\|_2\le \|\bar\rho_\sigma\|_2.
+\]
+Hence any normalized fixed point $f^\ast=T(f^\ast)$ satisfies $\|f^\ast\|_2\le \|\bar\rho_\sigma\|_2$,
+which is a convenient choice of the weak constant $W$ in Assumption~\ref{ass:LY-T-uniform}.
+
+\subsection{Fourier/Galerkin discretization}
+
+Let $\Pi_N$ be the Fourier projection onto modes $|k|\le N$ and let $\mathcal V_N:=\mathrm{Ran}(\Pi_N)$.
+Define the discrete surrogate (any of the equivalent variants you use in the note can be plugged here):
+\[
+T_N(f):=\Pi_N\,P_{c(\Pi_N f)}\,\Pi_N f,
+\qquad f\in \mathcal V_N.
+\]
+Compute a numerical candidate $\tilde f\in\mathcal V_N$ with $\ell(\tilde f)=1$,
+typically by a Newton solve in finite dimension.
+
+\subsection{A posteriori certification: what must be computed}
+
+The derivative has the explicit structure (rank-one update + translated transfer operator):
+\[
+DT(f)h = P_{c(f)}h \;+\; c'(f)[h]\;\partial_cP_{c(f)}f,
+\qquad
+c'(f)[h]=\delta\,G'(m(f))\,\langle \phi,h\rangle.
+\]
+The same form holds for $DT_N(\tilde f)$ after projecting to $\mathcal V_N$,
+so the Jacobian on $\ker\ell$ is a finite matrix (plus rank-one), suitable for rigorous inversion.
+
+
+\begin{corollary}[Rigorous fixed point enclosure for the coupled Gaussian RDS: checklist]\label{cor:gaussian-checklist}
+Fix parameters $(\sigma,\tau,\delta)$ and a coupling $(G,\phi)$ as above.
+Assume the uniform Lasota--Yorke bounds \emph{for the coupled operator} (hence in particular for every $c\in\mathbb R$):
+\[
+\|T(f)\|_2\le C_T\,\|f\|_2,
+\qquad
+\|T(f)\|_{\mathcal A_\tau}\le \alpha\,\|f\|_{\mathcal A_\tau}+\beta\,\|f\|_2
+\qquad(\alpha\in[0,1),\ \beta\ge 0),
+\]
+and the Gaussian smoothing bounds (uniform in $c$):
+\[
+\|P_c u\|_{\mathcal A_\tau}\le S_{\tau,\sigma}\,\|u\|_2,\qquad
+\|\partial_c P_c u\|_{\mathcal A_\tau}\le S^{(1)}_{\tau,\sigma}\,\|u\|_2,
+\]
+with weak $L^2$ bounds
+\[
+\|P_c u\|_2\le C_T\,\|u\|_2,\qquad
+\|\partial_c P_c u\|_2\le C_J\,\|u\|_2,\qquad
+\|\partial_c^2 P_c u\|_2\le C_J^{(2)}\,\|u\|_2.
+\]
+Let $\Pi_N$ be the Fourier truncation and define
+\[
+T_N(f):=\Pi_N\,T(\Pi_N f)
+\qquad\text{(so in particular the coupling uses } m(\Pi_N f)\text{)}.
+\]
+
+Let $\tilde f_N\in \mathcal A_\tau\cap\cH$ be a numerically computed approximate fixed point of $T_N$, and set
+\[
+K_2:=\|\tilde f_N\|_2,\qquad K_\tau:=\|\tilde f_N\|_{\mathcal A_\tau},\qquad
+\delta_N:=\|T_N(\tilde f_N)-\tilde f_N\|_2.
+\]
+Write the coupling regularity constants as
+\[
+L_G:=\|G'\|_\infty,\qquad \mathrm{Lip}(G):=\sup_{x\ne y}\frac{|G(x)-G(y)|}{|x-y|},\qquad
+L_{G'}:=\mathrm{Lip}(G')\ \ (\text{e.g. }L_{G'}=\|G''\|_\infty\text{ if }G\in C^2).
+\]
+
+Assume you have a certified weak inverse bound on the discrete Jacobian on the constraint slice:
+\[
+M_N\ \ge\ \bigl\|(I-DT_N(\tilde f_N))^{-1}\|_{2\to 2;\ker\ell}.
+\]
+
+Define the explicit truncation and mismatch errors (value level)
+\[
+e_T:=e^{-2\pi\tau N}(S_{\tau,\sigma}+1)K_\tau,
+\qquad
+e_{\mathrm{mis}}:=|\delta|\,\mathrm{Lip}(G)\,e^{-2\pi\tau N}\,\|\phi\|_{\mathcal A_\tau}\,C_J\,K_2^2,
+\]
+and set the total defect
+\[
+\Delta := \|T(\tilde f_N)-\tilde f_N\|_2\ \le\ \delta_N + e_T + e_{\mathrm{mis}}.
+\]
+(In particular, if $\phi$ is a trigonometric polynomial of degree $\le N$, then $m(\Pi_N f)=m(f)$ and $e_{\mathrm{mis}}=0$.)
+
+Define the explicit Jacobian mismatch (strong$\to$weak)
+\[
+\varepsilon_J:=\|DT(\tilde f_N)-DT_N(\tilde f_N)\|_{\mathcal A_\tau\to L^2},
+\]
+and bound it by
+\[
+\varepsilon_J\ \le\ e^{-2\pi\tau N}(S_{\tau,\sigma}+1)
++|\delta|L_G\|\phi\|_2K_\tau e^{-2\pi\tau N}\bigl(S^{(1)}_{\tau,\sigma}+C_J\bigr)
++e^{-2\pi\tau N}C_{\mathrm{mis}}(K_2),
+\]
+where
+\[
+C_{\mathrm{mis}}(K_2):=
+|\delta|\,\|\phi\|_{\mathcal A_\tau}\Bigl[(\mathrm{Lip}(G)+L_G)C_JK_2
++L_{G'}\|\phi\|_2C_JK_2^2\Bigr]
++|\delta|^2 L_G\mathrm{Lip}(G)\,\|\phi\|_2\,\|\phi\|_{\mathcal A_\tau}\,C_J^{(2)}K_2^2.
+\]
+(Again, if $\deg(\phi)\le N$ then $C_{\mathrm{mis}}(K_2)=0$.)
+
+Assume a certified inverse bound
+\[
+M:=\bigl\|(I-DT(\tilde f_N))^{-1}\bigr\|_{2\to 2;\ker\ell}<\infty.
+\]
+(For instance, if a reference inverse bound $M_N$ and a Jacobian mismatch estimate $\varepsilon_J$ satisfy $M_N\varepsilon_J<1$, then the Neumann-series argument gives $M\le \frac{M_N}{1-M_N\varepsilon_J}$.)
+
+Finally, define the explicit Lipschitz constant for the differential on an $L^2$-ball $\{f:\|f\|_2\le K\}$ by
+\[
+\|DT(f)-DT(g)\|_{2\to 2}\ \le\ \gamma(K)\,\|f-g\|_2,
+\]
+with
+\[
+\gamma(K):=
+|\delta|\,\|\phi\|_2\,C_J\bigl(\mathrm{Lip}(G)+L_G\bigr)
++|\delta|\,L_{G'}\,\|\phi\|_2^2\,C_JK
++|\delta|^2 L_G\mathrm{Lip}(G)\,\|\phi\|_2^2\,C_J^{(2)}K.
+\]
+
+Choose any $K\ge K_2$ and set $h:=M^2\gamma(K)\Delta$.
+If $h\le\tfrac12$, then there exists a unique normalized fixed point $f^\ast$ of $T$ in the $L^2$-ball $B_r(\tilde f_N)$, and
+\[
+\|f^\ast-\tilde f_N\|_2\le r,
+\qquad
+r:=\frac{1-\sqrt{1-2h}}{M\gamma(K)}
+\quad(\text{interpret }r:=M\Delta\text{ if }\gamma(K)=0).
+\]
+Moreover, the Newton map on $\ell(f)=1$ is a contraction on $B_r(\tilde f_N)$ with contraction constant
+\[
+\kappa=\frac{1-\sqrt{1-2h}}{h}\in(0,1).
+\]
+\end{corollary}
+
+
+\begin{remark}
+The point of Corollary~\ref{cor:gaussian-checklist} is that \emph{all hard quantities}
+($M_N$ and $\delta_N$) are computed in finite dimension, while the infinite-dimensional
+errors enter only through explicit $e^{-2\pi\tau N}$ factors and the Gaussian smoothing constants.
+No global bridge constant $B_N$ is used outside finite dimension.
+\end{remark}
+
+
+%============================================================
+\section{Example: unimodal map (quadratic/logistic) modulo $1$}
+\label{sec:unimodal-example}
+%============================================================
+
+Let $T_0(x)=a\,x(1-x)\pmod 1$ on $\mathbb T$ (with $a\in(0,4]$), and keep the same Gaussian noise and coupling
+$c(f)=\delta G(\langle\phi,f\rangle)$.
+
+In the Fourier basis $\{e^{2\pi i k x}\}$, the operator $P_c$ has matrix elements
+\[
+\widehat{P_c f}(k)=\widehat{\bar\rho_\sigma}(k)\,e^{-2\pi i k c}\,
+\sum_{m\in\mathbb Z} V_k(m)\,\hat f(m),
+\qquad
+V_k(m):=\int_{\mathbb T} e^{-2\pi i k T_0(y)}\,e^{2\pi i m y}\,dy,
+\]
+and $\widehat{\bar\rho_\sigma}(k)=e^{-2\pi^2\sigma^2 k^2}$.
+The only map-dependent ingredient is the (rigorously computed) oscillatory integral $V_k(m)$.
+Since the integrand is smooth and periodic, one may compute $V_k(m)$ by a validated trapezoidal rule
+or any rigorous quadrature scheme; the resulting bounds propagate directly into the finite-dimensional
+matrix for $P_c$ restricted to $\mathcal V_N$.
+
+\begin{corollary}[Concrete workflow for the unimodal example]\label{cor:unimodal-workflow}
+Fix parameters $(a,\sigma,\delta,\tau)$ and choose $N$.
+To obtain a rigorous enclosure of the unique normalized fixed point $f^\ast$ of the coupled system:
+\begin{enumerate}
+\item Compute a numerical candidate $\tilde f\in\mathcal V_N$ and enforce $\ell(\tilde f)=1$.
+\item Build the $(2N{+}1)\times(2N{+}1)$ matrix for $P_{c(\tilde f)}$ on modes $|k|\le N$ using
+validated approximations of $V_k(m)$ and the exact multiplier $e^{-2\pi^2\sigma^2 k^2}$.
+\item Assemble $DT_N(\tilde f)$ using the rank-one structure from $c'(f)[h]$ and $\partial_cP_c f$,
+and rigorously bound $M_N=\|(I-DT_N(\tilde f))^{-1}\|_{2\to 2}$ on $\ker\ell\cap\mathcal V_N$.
+\item Compute $\delta_N=\|T_N(\tilde f)-\tilde f\|_2$.
+\item Compute the explicit analytic constants entering $e_T$, $\varepsilon_J$, and $\gamma(K)$
+(using $\|\phi\|_2$, $\|\phi\|_{\mathcal A_\tau}$, $\mathrm{Lip}(G)$, bounds on $G'$ and $G''$,
+and $S_{\tau,\sigma},S^{(1)}_{\tau,\sigma},S^{(2)}_{\tau,\sigma}$).
+\item Check the inequalities of Corollary~\ref{cor:gaussian-checklist}
+(Neumann test and Kantorovich smallness). If they hold, conclude a unique fixed point $f^\ast$
+with an explicit radius $r$ such that $\|f^\ast-\tilde f\|_2\le r$.
+\end{enumerate}
+\end{corollary}
+
+\section{Appendix: Tapering and smoothing a map for FFT-based discretization}
+
+\paragraph{Goal.}
+Let $T:[-1,1]\to\mathbb R$ be a (non-periodic) map. In order to build an FFT-based
+finite-rank approximation of the annealed transfer operator with Gaussian noise,
+we construct from $T$ a periodic, FFT-friendly surrogate $\widetilde T$ on the
+period-$2$ torus $\mathbb T_2\simeq[-1,1]$ by a (i) tapering step near the boundary,
+followed by an optional (ii) Gaussian smoothing step, and (iii) Fourier truncation.
+We provide explicit bounds for $\|T-\widetilde T\|_\infty$ and for the induced operator error.
+
+\begin{definition}[Taper window]\label{def:taper-window}
+Fix a collar width $\eta\in(0,1)$ and a smooth step function $s:[0,1]\to[0,1]$
+satisfying $s(0)=0$, $s(1)=1$. Define an even taper window $w_\eta:[-1,1]\to[0,1]$ by
+\[
+w_\eta(x):=
+\begin{cases}
+1, & |x|\le 1-\eta,\\[2mm]
+s\!\left(\dfrac{1-|x|}{\eta}\right), & 1-\eta<|x|<1.
+\end{cases}
+\]
+Assume $\|s'\|_\infty\le C_1$ so that $\|w_\eta'\|_\infty\le C_1/\eta$.
+\end{definition}
+
+\begin{definition}[Derivative-tapered periodic map]\label{def:Teta}
+Assume $T\in C^2([-1,1])$. Define $T_\eta$ (up to an additive constant) by tapering the derivative:
+\[
+T_\eta'(x):=w_\eta(x)\,T'(x),\qquad x\in[-1,1],
+\]
+and fix the additive constant by requiring $T_\eta(0)=T(0)$.
+Then $T_\eta$ agrees with $T$ on $[-1+\eta,\,1-\eta]$ up to an additive constant and is
+flat at $\pm1$ in the sense that $T_\eta'(\pm1)=0$.
+We regard $T_\eta$ as a periodic function on $\mathbb T_2$.
+\end{definition}
+
+\begin{definition}[Period-$2$ Gaussian smoothing and Fourier truncation]\label{def:smooth-trunc}
+Let $\bar\rho_{\sigma_{\rm sm}}$ be the period-$2$ Gaussian kernel with Fourier multiplier
+\[
+\widehat{\bar\rho_{\sigma_{\rm sm}}}(k)=\exp\!\Bigl(-\tfrac{\pi^2\sigma_{\rm sm}^2}{2}\,k^2\Bigr),
+\qquad k\in\mathbb Z.
+\]
+Define the smoothing operator $G_{\sigma_{\rm sm}}f:=\bar\rho_{\sigma_{\rm sm}}*f$ on $\mathbb T_2$.
+Let $\Pi_N$ denote the Fourier projector onto modes $|k|\le N$ (period-$2$ convention).
+Set
+\[
+\widetilde T:=\Pi_N\bigl(G_{\sigma_{\rm sm}}T_\eta\bigr).
+\]
+\end{definition}
+
+\begin{lemma}[Explicit sup-norm bound for $T-\widetilde T$]\label{lem:T-Ttilde}
+With $\widetilde T$ as in Definition~\ref{def:smooth-trunc},
+\[
+\|T-\widetilde T\|_\infty
+\le
+\underbrace{\|T-T_\eta\|_\infty}_{\text{taper}}
++\underbrace{\|T_\eta-G_{\sigma_{\rm sm}}T_\eta\|_\infty}_{\text{smoothing}}
++\underbrace{\|G_{\sigma_{\rm sm}}T_\eta-\Pi_NG_{\sigma_{\rm sm}}T_\eta\|_\infty}_{\text{Fourier tail}}.
+\]
+Moreover, the following explicit bounds hold:
+\begin{align*}
+\|T-T_\eta\|_\infty
+&\le \eta\,\|T'\|_\infty,\\[1mm]
+\|T_\eta-G_{\sigma_{\rm sm}}T_\eta\|_\infty
+&\le \frac{\sigma_{\rm sm}^2}{2}\,\|T_\eta''\|_\infty
+\le \frac{\sigma_{\rm sm}^2}{2}\Bigl(\|T''\|_\infty+\frac{C_1}{\eta}\|T'\|_\infty\Bigr),\\[1mm]
+\|G_{\sigma_{\rm sm}}T_\eta-\Pi_NG_{\sigma_{\rm sm}}T_\eta\|_\infty
+&\le \frac{2\|T_\eta\|_\infty}{\pi^2\sigma_{\rm sm}^2\,N}
+\exp\!\Bigl(-\tfrac{\pi^2\sigma_{\rm sm}^2}{2}\,N^2\Bigr).
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+The triangle inequality yields the three-term decomposition.
+For the taper term, note that $T_\eta'=w_\eta T'$ and $0\le w_\eta\le1$, hence
+$|T(x)-T_\eta(x)|\le\int_{1-\eta}^1|T'(t)|dt\le \eta\|T'\|_\infty$ (and similarly near $-1$),
+giving $\|T-T_\eta\|_\infty\le \eta\|T'\|_\infty$.
+
+For the smoothing term, Gaussian convolution on the torus satisfies the standard second-order bound
+$\|f-G_\sigma f\|_\infty\le \frac{\sigma^2}{2}\|f''\|_\infty$ for $f\in C^2$.
+Differentiating $T_\eta'=w_\eta T'$ gives
+$T_\eta''=w_\eta'T'+w_\eta T''$, hence
+$\|T_\eta''\|_\infty\le \|w_\eta'\|_\infty\|T'\|_\infty+\|T''\|_\infty
+\le \frac{C_1}{\eta}\|T'\|_\infty+\|T''\|_\infty$.
+
+For the Fourier tail, use the Fourier multiplier formula for $G_{\sigma_{\rm sm}}$ and a Gaussian
+tail estimate for $\sum_{|k|>N}e^{-c k^2}$ to obtain
+$\|G_{\sigma_{\rm sm}}T_\eta-\Pi_NG_{\sigma_{\rm sm}}T_\eta\|_\infty
+\le \sum_{|k|>N}|\widehat{\bar\rho_{\sigma_{\rm sm}}}(k)|\,|\widehat{T_\eta}(k)|
+\le \|T_\eta\|_\infty\sum_{|k|>N}e^{-(\pi^2\sigma_{\rm sm}^2/2)k^2}$,
+and then bound the tail by an integral.
+\end{proof}
+
+\paragraph{Induced perturbation bound for the annealed transfer operator.}
+Let $\sigma_{\rm rds}>0$ and define the annealed transfer operator
+\[
+(\mathcal P_T f)(x)=\int_{-1}^1 \rho_{\sigma_{\rm rds}}(x-T(y))\,f(y)\,dy,
+\qquad f\in L^1([-1,1]),
+\]
+where $\rho_{\sigma_{\rm rds}}$ is the (periodized) Gaussian density.
+Then $\mathcal P_T:L^1\to L^1$ is bounded and depends Lipschitzly on the map in sup norm:
+
+\begin{lemma}[$L^1\to L^1$ stability w.r.t.\ map perturbations]\label{lem:PT-stability}
+Assume $\rho_{\sigma_{\rm rds}}$ is Gaussian. Then
+\[
+\|\mathcal P_T-\mathcal P_{\widetilde T}\|_{L^1\to L^1}
+\le \frac{\sqrt{2/\pi}}{\sigma_{\rm rds}}\;\|T-\widetilde T\|_\infty.
+\]
+\end{lemma}
+
+\begin{proof}
+For each $y$,
+$\int | \rho_{\sigma_{\rm rds}}(\cdot-T(y))-\rho_{\sigma_{\rm rds}}(\cdot-\widetilde T(y))|\,dx
+\le |T(y)-\widetilde T(y)|\int|\rho_{\sigma_{\rm rds}}'(x)|dx
+=|T(y)-\widetilde T(y)|\sqrt{2/\pi}/\sigma_{\rm rds}$.
+Integrate in $y$ against $|f(y)|$ and take the supremum over $\|f\|_1=1$.
+\end{proof}
+
+%============================================================
+% L^2 stability bound + smoothing bound (with and without C_1)
+%============================================================
+
+\paragraph{$L^2\to L^2$ stability of the annealed operator w.r.t.\ map perturbations.}
+Let $\mathbb T_2\simeq[-1,1]$ be the period-$2$ torus, and let $\bar\rho_\sigma$ be the
+periodized Gaussian kernel. For a measurable map $T:\mathbb T_2\to\mathbb R$ define
+\[
+(\mathcal P_T f)(x):=\int_{\mathbb T_2}\bar\rho_{\sigma_{\rm rds}}\!\bigl(x-T(y)\bigr)\,f(y)\,dy,
+\qquad f\in L^2(\mathbb T_2).
+\]
+Then for any two maps $T,\widetilde T$,
+\begin{lemma}[$L^2$ Lipschitz bound]\label{lem:P_L2_stability}
+\[
+\|\mathcal P_T-\mathcal P_{\widetilde T}\|_{L^2\to L^2}
+\;\le\;
+\sqrt{2}\,\|\bar\rho_{\sigma_{\rm rds}}'\|_{L^2(\mathbb T_2)}\;\|T-\widetilde T\|_{L^\infty(\mathbb T_2)}.
+\]
+Moreover, with the period-$2$ Fourier basis $e_k(x)=e^{i\pi kx}$ one has the explicit identity
+\[
+\|\bar\rho_{\sigma}'\|_{L^2(\mathbb T_2)}^2
+=
+\sum_{k\in\mathbb Z}(\pi k)^2
+\exp\!\bigl(-\pi^2\sigma^2 k^2\bigr).
+\]
+\end{lemma}
+\begin{proof}
+For each $y$ and $u,v\in\mathbb R$, by the fundamental theorem of calculus in the shift parameter,
+\[
+\bar\rho(\cdot-u)-\bar\rho(\cdot-v)=\int_v^u -\bar\rho'(\cdot-t)\,dt,
+\]
+hence $\|\bar\rho(\cdot-u)-\bar\rho(\cdot-v)\|_2\le |u-v|\,\|\bar\rho'\|_2$.
+Therefore
+\[
+\|(\mathcal P_T-\mathcal P_{\widetilde T})f\|_2
+\le
+\int_{\mathbb T_2}\|\bar\rho(\cdot-T(y))-\bar\rho(\cdot-\widetilde T(y))\|_2\,|f(y)|\,dy
+\le
+\|\bar\rho'\|_2\,\|T-\widetilde T\|_\infty\,\|f\|_1.
+\]
+Finally, $\|f\|_1\le |\mathbb T_2|^{1/2}\|f\|_2=\sqrt{2}\|f\|_2$ gives the stated $L^2\to L^2$ bound.
+The Fourier identity follows from Parseval and the fact that $\widehat{\bar\rho_\sigma}(k)
+=\exp(-\tfrac{\pi^2\sigma^2}{2}k^2)$, so $\widehat{\bar\rho_\sigma'}(k)=i\pi k\,\widehat{\bar\rho_\sigma}(k)$.
+\end{proof}
+
+\paragraph{Gaussian smoothing bounds in $\|\cdot\|_\infty$.}
+Let $G_{\sigma_{\rm sm}}$ denote period-$2$ Gaussian convolution on $\mathbb T_2$.
+
+\begin{lemma}[Smoothing bounds]\label{lem:smoothing_bounds}
+For $f\in W^{1,\infty}(\mathbb T_2)$,
+\[
+\|f-G_{\sigma_{\rm sm}}f\|_\infty
+\le
+\sqrt{\frac{2}{\pi}}\,\sigma_{\rm sm}\,\|f'\|_\infty.
+\]
+If moreover $f\in W^{2,\infty}(\mathbb T_2)$, then
+\[
+\|f-G_{\sigma_{\rm sm}}f\|_\infty
+\le
+\frac{\sigma_{\rm sm}^2}{2}\,\|f''\|_\infty.
+\]
+\end{lemma}
+\begin{proof}
+Write $(G_\sigma f)(x)=\int f(x-t)\rho_\sigma(t)\,dt$. Then
+\[
+f(x)-G_\sigma f(x)=\int \bigl(f(x)-f(x-t)\bigr)\rho_\sigma(t)\,dt.
+\]
+For $W^{1,\infty}$ use $|f(x)-f(x-t)|\le |t|\|f'\|_\infty$ and $\int |t|\rho_\sigma(t)\,dt
+=\sigma\sqrt{2/\pi}$. For $W^{2,\infty}$ use the second-order Taylor remainder
+$|f(x)-f(x-t)-t f'(x)|\le \tfrac{t^2}{2}\|f''\|_\infty$ and $\int t^2\rho_\sigma(t)\,dt=\sigma^2$.
+(The same constants hold for the periodized kernel.)
+\end{proof}
+
+\paragraph{Explicit $C_1$ for the basic bump $b(u)=e^{-1/u}$.}
+Define $b(u)=e^{-1/u}$ for $u>0$ and $b(0)=0$. Then $b'(u)=e^{-1/u}/u^2$ and
+\[
+\sup_{u\in(0,1]} |b'(u)| = b'\!\left(\tfrac12\right)=4e^{-2}.
+\]
+In particular, if a taper window is built from $b$ by rescaling $u=(1-|x|)/\eta$,
+one obtains a bound $\|w_\eta'\|_\infty\le (4e^{-2})/\eta$.
+
+
+%============================================================
+\section{Appendix: Relaxing Fr\'echet differentiability}\label{sec:relaxFrechet}
+%============================================================
+
+For the NK estimates above we only need an \emph{integral remainder formula}
+and an estimate in the mixed operator norm $\|\cdot\|_{s\to w}$.
+
+\begin{assumption}[Continuous G\^ateaux differentiability in strong directions]\label{ass:Gateaux}
+For each $g\in U\cap\Bs$ there exists a bounded linear map $DT(g)\in\mathcal L(\Bs,\Bw)$ such that:
+\begin{enumerate}
+\item For every $h\in\Bs$,
+\[
+\lim_{\varepsilon\to 0}\left\|\frac{T(g+\varepsilon h)-T(g)}{\varepsilon}-DT(g)h\right\|_w=0.
+\]
+\item For every segment $g_t=f+th$ contained in $U\cap\Bs$,
+the map $t\mapsto DT(g_t)$ is continuous in operator norm $\|\cdot\|_{s\to w}$.
+\end{enumerate}
+\end{assumption}
+
+\begin{lemma}[Integral remainder formula]\label{lem:int-remainder}
+Assume Assumption~\ref{ass:Gateaux}. If $f\in U\cap\Bs$ and $h\in\Bs$ are such that
+$f+th\in U$ for all $t\in[0,1]$, then
+\[
+T(f+h)-T(f)=\int_0^1 DT(f+th)\,h\,dt
+\quad\text{(Bochner integral in $\Bw$)}.
+\]
+Consequently,
+\[
+T(f+h)-T(f)-DT(f)h=\int_0^1 \bigl(DT(f+th)-DT(f)\bigr)\,h\,dt,
+\]
+and hence
+\[
+\|T(f+h)-T(f)-DT(f)h\|_w
+\le
+\Bigl(\sup_{t\in[0,1]}\|DT(f+th)-DT(f)\|_{s\to w}\Bigr)\,\|h\|_s.
+\]
+\end{lemma}
+
+\begin{proof}
+Define $\phi(t)=T(f+th)\in\Bw$.
+Assumption~\ref{ass:Gateaux}(1) gives differentiability with $\phi'(t)=DT(f+th)h$,
+and Assumption~\ref{ass:Gateaux}(2) gives continuity of $\phi'$, hence Bochner integrability.
+Apply the Banach-space fundamental theorem of calculus.
+\end{proof}
+
+\begin{remark}[Compatibility with Galatolo--Tanzi style]
+This is the exact weakening typically used when one controls the differential only as
+$\|DT(\cdot)\|_{s\to w}$ and continuity is available in a weaker topology:
+you never need a full Fr\'echet remainder in $\|\cdot\|_s$, only the integral formula above.
+\end{remark}
+
+\section{Appendix: Proofs of the Gaussian constants ($C_T$, $C_J$, $\gamma$)}\label{app:gaussian-constants}
+
+
+% ============================================================
+% Analytic strong norm + Fourier discretization for
+% self-consistent noisy transfer operators with analytic coupling.
+% Strong space: A_\tau, weak space: L^2.
+% ============================================================
+
+\subsection{Analytic strong norm and Fourier truncation}
+
+\begin{definition}[Analytic strip norm]\label{def:Atau}
+Fix $\tau>0$. For $f(x)=\sum_{k\in\mathbb Z}\cHat f(k)e^{2\pi i kx}$ define
+\[
+  \|f\|_{\mathcal A_\tau}^2
+  := \sum_{k\in\mathbb Z} e^{4\pi\tau|k|}\,|\cHat f(k)|^2.
+\]
+Let $\mathcal A_\tau(\T):=\{f\in L^2(\T):\|f\|_{\mathcal A_\tau}<\infty\}$.
+\end{definition}
+
+\begin{lemma}[Exponential tail for Fourier truncation]\label{lem:tail}
+Let $\Pi_N$ be the $L^2$-orthogonal projection onto Fourier modes $|k|\le N$.
+Then for all $f\in\mathcal A_\tau$,
+\[
+  \|(I-\Pi_N)f\|_{L^2}\ \le\ e^{-2\pi\tau N}\,\|f\|_{\mathcal A_\tau}.
+\]
+\end{lemma}
+
+\subsection{Noisy transfer operator with additive Gaussian noise}
+
+\begin{definition}[Periodized Gaussian kernel]\label{def:gauss}
+Let $\bar\rho_\sigma$ be the periodized Gaussian on $\T$ with Fourier coefficients
+\[
+\widehat{\bar\rho_\sigma}(k)=e^{-2\pi^2\sigma^2 k^2}.
+\]
+Define the convolution (noise) operator $C_\sigma u:=\bar\rho_\sigma*u$.
+\end{definition}
+
+\begin{lemma}[Gaussian smoothing into analytic strip]\label{lem:gauss-analytic}
+For every $\tau>0$ and $\sigma>0$, $C_\sigma:L^2\to \mathcal A_\tau$ is bounded with
+\[
+\|C_\sigma u\|_{\mathcal A_\tau}
+\le S_{\tau,\sigma}\,\|u\|_{2},
+\qquad
+S_{\tau,\sigma}:=\sup_{k\in\mathbb Z} \exp\!\bigl(2\pi\tau|k|-2\pi^2\sigma^2k^2\bigr).
+\]
+In particular, $S_{\tau,\sigma}\le \exp(\tau^2/(2\sigma^2))$ (crude but explicit).
+\end{lemma}
+
+\begin{definition}[Noisy operator with shift]\label{def:Pc}
+Fix a measurable map $T_0:\T\to\T$ (e.g.\ a quadratic map modulo $1$) and define,
+for $c\in\R$,
+\[
+(P_c u)(x):=\int_{\T}\bar\rho_\sigma\bigl(x-T_0(y)-c\bigr)\,u(y)\,dy.
+\]
+Define $Q_c:=\partial_c P_c$ (derivative w.r.t.\ the shift).
+\end{definition}
+
+\begin{lemma}[Mixed bounds for $P_c$]\label{lem:Pc-mixed-analytic}
+For every $c\in\R$ and $u\in L^2(\T)$,
+\[
+\|P_c u\|_{\mathcal A_\tau}\le S_{\tau,\sigma}\,\|u\|_2,
+\qquad
+\|P_c u\|_2\le \|u\|_2.
+\]
+\end{lemma}
+
+\begin{definition}[Shift-derivative operator]\label{def:Qc}
+Let $Q_c:=\partial_c P_c$. Then
+\[
+(Q_c u)(x)=-\int_{\T}\bar\rho_\sigma'\bigl(x-T_0(y)-c\bigr)\,u(y)\,dy,
+\]
+and in Fourier:
+\[
+\widehat{Q_cu}(k)=(-2\pi i k)\widehat{\bar\rho_\sigma}(k)e^{-2\pi i kc}
+\int_{\T}u(y)e^{-2\pi i kT_0(y)}\,dy.
+\]
+Define
+\[
+S^{(1)}_{\tau,\sigma}:=\sup_{k\in\mathbb Z} (2\pi|k|)\exp\!\bigl(2\pi\tau|k|-2\pi^2\sigma^2k^2\bigr),
+\qquad
+C_J:=\sup_{k\in\mathbb Z}(2\pi|k|)e^{-2\pi^2\sigma^2k^2}.
+\]
+\end{definition}
+
+\begin{lemma}[Mixed bounds for $Q_c$]\label{lem:Qc-mixed-analytic}
+For every $c\in\R$ and $u\in L^2(\T)$,
+\[
+\|Q_cu\|_{\mathcal A_\tau}\le S^{(1)}_{\tau,\sigma}\|u\|_2,
+\qquad
+\|Q_cu\|_2\le C_J\|u\|_2.
+\]
+\end{lemma}
+
+\subsection{Self-consistent coupling with analytic observable}
+
+\begin{assumption}[Coupling functional and regularity]\label{ass:coupling-analytic}
+Let $\phi\in L^2(\T)$ (in applications $\phi\in\mathcal A_\tau$) and define
+\[
+m(f):=\langle \phi,f\rangle_{L^2}.
+\]
+Let $G:\R\to\R$ be $C^1$ on a relevant interval, and set
+\[
+c(f):=\delta\,G(m(f)),\qquad
+c'(f)[h]=\delta\,G'(m(f))\,\langle\phi,h\rangle_{L^2}.
+\]
+Denote
+\[
+L_G:=\sup |G'|\quad\text{on the relevant interval},\qquad
+\mathrm{Lip}(G):=\sup_{x\neq y}\frac{|G(x)-G(y)|}{|x-y|}\ \ \text{on that interval}.
+\]
+\end{assumption}
+
+\begin{definition}[Self-consistent map]\label{def:T}
+Define
+\[
+T(f):=P_{c(f)}f.
+\]
+\end{definition}
+
+\subsection{Two Fourier discretizations and the parameter mismatch}
+
+\begin{definition}[Two choices of $T_N$]\label{def:TNchoices}
+Let $N\in\mathbb N$. Define
+\begin{align*}
+\textbf{(A) ``semi-discrete coupling'':}\quad
+T_N^{A}(f)
+&:=\Pi_N\,P_{c(f)}\,\Pi_N f,\\
+\textbf{(B) ``fully discrete coupling'':}\quad
+T_N^{B}(f)
+&:=\Pi_N\,P_{c(\Pi_N f)}\,\Pi_N f.
+\end{align*}
+\end{definition}
+
+\begin{remark}[Trig polynomial case as a special simplification]\label{rem:polycase}
+If $\phi$ is a trigonometric polynomial of degree $K$ and $N\ge K$, then
+$\langle \phi,\Pi_N f\rangle=\langle \phi,f\rangle$ for all $f\in L^2$.
+Hence $c(\Pi_N f)=c(f)$ and therefore $T_N^A=T_N^B$ exactly (and likewise for their differentials).
+In this case all ``parameter mismatch'' terms below vanish.
+\end{remark}
+
+\begin{lemma}[Mismatch in $m$ and in $c$ for analytic $\phi$]\label{lem:mismatch}
+Assume $\phi\in\mathcal A_\tau$ and $f\in L^2$. Then
+\[
+|m(f)-m(\Pi_N f)|
+=|\langle (I-\Pi_N)\phi,f\rangle|
+\le \|(I-\Pi_N)\phi\|_2\,\|f\|_2
+\le e^{-2\pi\tau N}\,\|\phi\|_{\mathcal A_\tau}\,\|f\|_2.
+\]
+Consequently,
+\[
+|c(f)-c(\Pi_N f)|
+\le |\delta|\,\mathrm{Lip}(G)\,e^{-2\pi\tau N}\,\|\phi\|_{\mathcal A_\tau}\,\|f\|_2.
+\]
+\end{lemma}
+
+\begin{remark}[Why $T_N^B$ is convenient in practice]\label{rem:whichTN}
+$T_N^B$ is the genuinely finite-dimensional self-consistent map: all ingredients depend only on $\Pi_N f$.
+This is typically what you implement if you cannot evaluate the true residual $T(f)-f$.
+When $\phi$ is analytic (not a polynomial), $T_N^A$ and $T_N^B$ differ by an exponentially small mismatch
+term controlled by Lemma~\ref{lem:mismatch}.
+\end{remark}
+
+\subsection{Exponential discretization bounds for $T$ and the mismatch term}
+
+\begin{lemma}[Exponential discretization error for $T$ vs.\ $T_N^A$]\label{lem:T-TA}
+For all $f\in \mathcal A_\tau$,
+\[
+\|T(f)-T_N^{A}(f)\|_{L^2}
+\le e^{-2\pi\tau N}\,\bigl(S_{\tau,\sigma}+1\bigr)\,\|f\|_{\mathcal A_\tau}.
+\]
+Equivalently,
+\[
+\|T-T_N^A\|_{\mathcal A_\tau\to L^2}\le e^{-2\pi\tau N}\,(S_{\tau,\sigma}+1).
+\]
+\end{lemma}
+
+\begin{proof}
+Split
+\[
+T(f)-T_N^A(f)=(I-\Pi_N)P_{c(f)}f+\Pi_NP_{c(f)}(I-\Pi_N)f.
+\]
+Use Lemma~\ref{lem:tail} and Lemma~\ref{lem:Pc-mixed-analytic} exactly as in the polynomial case.
+\end{proof}
+
+\begin{lemma}[Mismatch error between $T_N^A$ and $T_N^B$]\label{lem:TA-TB}
+Assume $\phi\in\mathcal A_\tau$ and $f\in L^2$, and Assumption~\ref{ass:coupling-analytic}.
+Then
+\[
+\|T_N^A(f)-T_N^B(f)\|_2
+\le |c(f)-c(\Pi_N f)|\;C_J\;\|f\|_2,
+\]
+and hence, using Lemma~\ref{lem:mismatch},
+\[
+\|T_N^A(f)-T_N^B(f)\|_2
+\le |\delta|\,\mathrm{Lip}(G)\,e^{-2\pi\tau N}\,\|\phi\|_{\mathcal A_\tau}\,C_J\;\|f\|_2^2.
+\]
+\end{lemma}
+
+\begin{proof}
+Write $c_A:=c(f)$ and $c_B:=c(\Pi_N f)$. Then
+\[
+T_N^A(f)-T_N^B(f)=\Pi_N\bigl(P_{c_A}-P_{c_B}\bigr)\Pi_N f.
+\]
+By the one-dimensional mean value theorem in the parameter $c$,
+for some $\theta\in(0,1)$,
+\[
+P_{c_A}-P_{c_B}=(c_A-c_B)\,Q_{c_B+\theta(c_A-c_B)}.
+\]
+Therefore,
+\[
+\|T_N^A(f)-T_N^B(f)\|_2
+\le |c_A-c_B|\,\|Q_{\cdot}\Pi_N f\|_2
+\le |c(f)-c(\Pi_N f)|\,C_J\,\|f\|_2,
+\]
+and the final bound follows from Lemma~\ref{lem:mismatch}.
+\end{proof}
+
+\subsection{Differentials $DT$, $DT_N$ and exponential bounds}
+
+\begin{lemma}[Fr\'echet derivative of $T$]\label{lem:DT}
+Assume Assumption~\ref{ass:coupling-analytic}. Then $T:\mathcal A_\tau\to L^2$ is Fr\'echet differentiable and
+\[
+DT(f)[h]=P_{c(f)}h + c'(f)[h]\;Q_{c(f)}f,
+\qquad
+c'(f)[h]=\delta\,G'(m(f))\,\langle\phi,h\rangle.
+\]
+Moreover,
+\[
+|c'(f)[h]|\le |\delta|\,L_G\,\|\phi\|_2\,\|h\|_{\mathcal A_\tau}.
+\]
+\end{lemma}
+
+\begin{lemma}[Fr\'echet derivatives of $T_N^A$ and $T_N^B$]\label{lem:DTN}
+Assume Assumption~\ref{ass:coupling-analytic}. Then $T_N^A,T_N^B:\mathcal A_\tau\to L^2$ are Fr\'echet differentiable and
+\begin{align*}
+DT_N^{A}(f)[h]
+&=
+\Pi_N\,P_{c(f)}\,\Pi_N h
+\;+\;
+c'(f)[h]\;\Pi_N\,Q_{c(f)}\,\Pi_N f,\\
+DT_N^{B}(f)[h]
+&=
+\Pi_N\,P_{c(\Pi_N f)}\,\Pi_N h
+\;+\;
+c'(\Pi_N f)[\Pi_N h]\;\Pi_N\,Q_{c(\Pi_N f)}\,\Pi_N f.
+\end{align*}
+\end{lemma}
+
+\begin{remark}[Polynomial case]\label{rem:DTpoly}
+If $\phi$ is a trigonometric polynomial of degree $K$ and $N\ge K$, then $c(\Pi_N f)=c(f)$ and
+$c'(\Pi_N f)[\Pi_N h]=c'(f)[h]$, hence $DT_N^A(f)=DT_N^B(f)$ exactly.
+\end{remark}
+
+\begin{lemma}[Exponential bound for $DT-DT_N^A$]\label{lem:DT-DTNA}
+Assume Assumption~\ref{ass:coupling-analytic} and let $f\in\mathcal A_\tau$.
+Then for all $h\in\mathcal A_\tau$,
+\[
+\|(DT(f)-DT_N^{A}(f))[h]\|_2
+\le e^{-2\pi\tau N}(S_{\tau,\sigma}+1)\|h\|_{\mathcal A_\tau}
++ |\delta|L_G\|\phi\|_2\;e^{-2\pi\tau N}(S^{(1)}_{\tau,\sigma}+C_J)\;\|f\|_{\mathcal A_\tau}\,\|h\|_{\mathcal A_\tau}.
+\]
+In particular, on $\{f:\|f\|_{\mathcal A_\tau}\le K\}$,
+\[
+\sup_{\|f\|_{\mathcal A_\tau}\le K}\|DT(f)-DT_N^{A}(f)\|_{\mathcal A_\tau\to L^2}
+\le e^{-2\pi\tau N}(S_{\tau,\sigma}+1)
++ |\delta|L_G\|\phi\|_2\;K\;e^{-2\pi\tau N}(S^{(1)}_{\tau,\sigma}+C_J).
+\]
+\end{lemma}
+
+\begin{proof}
+\textbf{Step 0: remark about the choice of $T_N$.}
+We use $T_N(f)=\Pi_NP_{c(f)}\Pi_N f$ (``semi-discrete coupling'').
+If instead one uses the fully discrete coupling $T_N^{B}(f)=\Pi_NP_{c(\Pi_N f)}\Pi_N f$,
+then since $\psi$ has degree $K$ and $N\ge K$, we have $\langle\psi,\Pi_N f\rangle=\langle\psi,f\rangle$
+and thus $c(\Pi_N f)=c(f)$; hence $T_N^B=T_N$ and the same formulas apply.
+
+\medskip
+\textbf{Step 1: Fr\'echet derivative of $T$.}
+Write $c=c(f)$ and $c_h=c(f+h)$.
+Then
+\[
+T(f+h)-T(f)=P_{c_h}(f+h)-P_c f
+= P_c h + (P_{c_h}-P_c)f + (P_{c_h}-P_c)h.
+\]
+We claim that
+\[
+(P_{c_h}-P_c)f = (c_h-c)\,Q_c f + o(\|h\|_{\mathcal A_\tau})\quad\text{in }L^2.
+\]
+Indeed, for fixed $f$, the map $c\mapsto P_c f$ is $C^1$ (differentiate under the integral,
+or use the Fourier formula), with derivative $Q_c f$, so by the mean value theorem in one real variable
+there exists $\theta\in(0,1)$ such that
+\[
+P_{c_h}f-P_c f = (c_h-c)\,Q_{c+\theta(c_h-c)} f.
+\]
+Hence
+\[
+\|(P_{c_h}-P_c)f-(c_h-c)Q_c f\|_2
+\le |c_h-c|\,\|(Q_{c+\theta(c_h-c)}-Q_c)f\|_2 = o(|c_h-c|),
+\]
+as $c_h\to c$. Since $c(\cdot)$ is Fr\'echet differentiable and thus
+$|c_h-c-c'(f)[h]|=o(\|h\|_{\mathcal A_\tau})$, we obtain
+\[
+(P_{c_h}-P_c)f = c'(f)[h]\,Q_c f + o(\|h\|_{\mathcal A_\tau}).
+\]
+Finally, $(P_{c_h}-P_c)h$ is a remainder:
+using the (local) Lipschitz continuity in $c$ of $P_c$ as an operator $L^2\to L^2$,
+\[
+\|(P_{c_h}-P_c)h\|_2\le C|c_h-c|\,\|h\|_2 = o(\|h\|_{\mathcal A_\tau}),
+\]
+because $|c_h-c|=O(\|h\|_2)\le O(\|h\|_{\mathcal A_\tau})$.
+Collecting terms yields the derivative formula
+\[
+DT(f)[h]=P_{c(f)}h + c'(f)[h]\,Q_{c(f)}f.
+\]
+
+\medskip
+\textbf{Step 2: Fr\'echet derivative of $T_N$.}
+Since $T_N(f)=\Pi_N\,P_{c(f)}\,\Pi_N f$ is a composition of bounded linear maps with the scalar $C^1$
+functional $c(\cdot)$, the chain rule gives
+\[
+DT_N(f)[h]=\Pi_N P_{c(f)}\Pi_N h + c'(f)[h]\;\Pi_N Q_{c(f)}\Pi_N f.
+\]
+
+\medskip
+\textbf{Step 3: Split $DT-DT_N$.}
+Let $c=c(f)$. Using the two formulas,
+\[
+(DT(f)-DT_N(f))[h]
+=
+\underbrace{\Bigl(P_c-\Pi_NP_c\Pi_N\Bigr)h}_{\mathrm{(I)}}
+\;+\;
+c'(f)[h]\;\underbrace{\Bigl(Q_c-\Pi_NQ_c\Pi_N\Bigr)f}_{\mathrm{(II)}}.
+\]
+
+\medskip
+\textbf{Step 4: Bound term (I).}
+Decompose
+\[
+\bigl(P_c-\Pi_NP_c\Pi_N\bigr)h
+=
+(I-\Pi_N)P_c h \;+\;\Pi_NP_c(I-\Pi_N)h.
+\]
+For the first part, apply the exponential tail with $g=P_c h$ and then the mixed bound:
+\[
+\|(I-\Pi_N)P_c h\|_2 \le e^{-2\pi\tau N}\|P_c h\|_{\mathcal A_\tau}
+\le e^{-2\pi\tau N}S_{\tau,\sigma}\|h\|_2
+\le e^{-2\pi\tau N}S_{\tau,\sigma}\|h\|_{\mathcal A_\tau}.
+\]
+For the second part, use $\|\Pi_N\|_{2\to 2}=1$ and the $L^2$ bound for $P_c$:
+\[
+\|\Pi_NP_c(I-\Pi_N)h\|_2 \le \|P_c(I-\Pi_N)h\|_2
+\le \|(I-\Pi_N)h\|_2
+\le e^{-2\pi\tau N}\|h\|_{\mathcal A_\tau}.
+\]
+Thus
+\[
+\|\mathrm{(I)}\|_2\le e^{-2\pi\tau N}(S_{\tau,\sigma}+1)\|h\|_{\mathcal A_\tau}.
+\]
+
+\medskip
+\textbf{Step 5: Bound term (II).}
+Similarly,
+\[
+(Q_c-\Pi_NQ_c\Pi_N)f
+= (I-\Pi_N)Q_c f + \Pi_NQ_c(I-\Pi_N)f.
+\]
+For the first part,
+\[
+\|(I-\Pi_N)Q_c f\|_2
+\le e^{-2\pi\tau N}\|Q_c f\|_{\mathcal A_\tau}
+\le e^{-2\pi\tau N}S^{(1)}_{\tau,\sigma}\|f\|_2
+\le e^{-2\pi\tau N}S^{(1)}_{\tau,\sigma}\|f\|_{\mathcal A_\tau}.
+\]
+For the second part,
+\[
+\|\Pi_NQ_c(I-\Pi_N)f\|_2
+\le \|Q_c(I-\Pi_N)f\|_2
+\le C_J\,\|(I-\Pi_N)f\|_2
+\le e^{-2\pi\tau N}C_J\|f\|_{\mathcal A_\tau}.
+\]
+Hence
+\[
+\|\mathrm{(II)}\|_2\le e^{-2\pi\tau N}(S^{(1)}_{\tau,\sigma}+C_J)\|f\|_{\mathcal A_\tau}.
+\]
+
+\medskip
+\textbf{Step 6: Control of $|c'(f)[h]|$.}
+By Cauchy--Schwarz,
+\[
+|\langle\psi,h\rangle|\le \|\psi\|_2\|h\|_2\le \|\psi\|_2\|h\|_{\mathcal A_\tau}.
+\]
+Therefore
+\[
+|c'(f)[h]|
+=|\delta|\;|G'(\langle\psi,f\rangle)|\;|\langle\psi,h\rangle|
+\le |\delta|\,L_G\,\|\psi\|_2\,\|h\|_{\mathcal A_\tau}.
+\]
+
+\medskip
+\textbf{Step 7: Combine.}
+Using the split in Step 3, the bound on (I), and the bound on (II) multiplied by $|c'(f)[h]|$,
+we obtain exactly:
+\[
+\|(DT(f)-DT_N(f))[h]\|_2
+\le e^{-2\pi\tau N}(S_{\tau,\sigma}+1)\|h\|_{\mathcal A_\tau}
++ |\delta|L_G\|\psi\|_2\;e^{-2\pi\tau N}(S^{(1)}_{\tau,\sigma}+C_J)\;\|f\|_{\mathcal A_\tau}\,\|h\|_{\mathcal A_\tau}.
+\]
+Taking the supremum over $\|h\|_{\mathcal A_\tau}=1$ yields the operator norm bound, and then
+restricting to $\|f\|_{\mathcal A_\tau}\le K$ gives the stated uniform estimate.
+\end{proof}
+
+\begin{remark}[From $DT-DT_N^A$ to $DT-DT_N^B$]\label{rem:DTB}
+To estimate $DT-DT_N^B$, add the mismatch term
+\[
+DT_N^A(f)-DT_N^B(f),
+\]
+which is controlled by $|c(f)-c(\Pi_N f)|$ and $|c'(f)[h]-c'(\Pi_N f)[\Pi_N h]|$.
+When $\phi$ is a trig polynomial and $N\ge \deg(\phi)$ this mismatch vanishes exactly.
+When $\phi\in\mathcal A_\tau$, the mismatch is exponentially small by Lemma~\ref{lem:mismatch}.
+\end{remark}
+
+\begin{lemma}[Explicit mismatch bound for $DT_N^A-DT_N^B$]\label{lem:DTNA-DTNB-explicit}
+Assume $\phi\in\mathcal A_\tau$ and define
+\[
+m(f):=\langle \phi,f\rangle_{L^2},\qquad c(f):=\delta\,G(m(f)),
+\qquad c'(f)[h]=\delta\,G'(m(f))\,\langle\phi,h\rangle.
+\]
+Assume $G\in C^2$ on the relevant range and set
+\[
+L_G:=\sup|G'|,\qquad \Lip(G):=\sup_{x\neq y}\frac{|G(x)-G(y)|}{|x-y|},\qquad
+L_{G'}:=\sup|G''|.
+\]
+Let $T_N^A(f)=\Pi_NP_{c(f)}\Pi_N f$ and $T_N^B(f)=\Pi_NP_{c(\Pi_N f)}\Pi_N f$.
+Let $Q_c=\partial_cP_c$ and $R_c:=\partial_cQ_c=\partial_c^2P_c$ and assume the $L^2$-bounds
+\[
+\|Q_c u\|_2\le C_J\|u\|_2,
+\qquad
+\|R_c u\|_2\le C_J^{(2)}\|u\|_2
+\quad\text{uniformly in }c\in\R.
+\]
+Then for every $f\in L^2(\T)$ and every $h\in\mathcal A_\tau$,
+\[
+\bigl\|(DT_N^A(f)-DT_N^B(f))[h]\bigr\|_2
+\;\le\; e^{-2\pi\tau N}\,\mathcal C(f)\,\|h\|_{\mathcal A_\tau},
+\]
+where
+\[
+\mathcal C(f)
+:=
+|\delta|\,\|\phi\|_{\mathcal A_\tau}\Bigl[
+\Lip(G)\,C_J\,\|f\|_2
++
+L_G\,C_J\,\|f\|_2
++
+L_{G'}\,\|\phi\|_2\,C_J\,\|f\|_2^2
+\Bigr]
++
+|\delta|^2\,L_G\,\Lip(G)\,\|\phi\|_2\,\|\phi\|_{\mathcal A_\tau}\,C_J^{(2)}\,\|f\|_2^2.
+\]
+Consequently, on the ball $\{f:\|f\|_{\mathcal A_\tau}\le K\}$ (hence $\|f\|_2\le K$),
+\[
+\sup_{\|f\|_{\mathcal A_\tau}\le K}
+\|DT_N^A(f)-DT_N^B(f)\|_{\mathcal A_\tau\to L^2}
+\;\le\;
+e^{-2\pi\tau N}\Bigl(
+|\delta|\,\|\phi\|_{\mathcal A_\tau}\bigl[(\Lip(G)+L_G)C_JK
++L_{G'}\|\phi\|_2C_JK^2\bigr]
++|\delta|^2L_G\Lip(G)\|\phi\|_2\|\phi\|_{\mathcal A_\tau}C_J^{(2)}K^2
+\Bigr).
+\]
+
+\medskip
+\noindent\textbf{Polynomial case.}
+If $\phi$ is a trigonometric polynomial of degree $K_0$ and $N\ge K_0$, then
+$m(\Pi_N f)=m(f)$ for all $f$, so $c(\Pi_N f)=c(f)$ and $c'(\Pi_N f)[\Pi_N h]=c'(f)[h]$.
+Hence $DT_N^A(f)=DT_N^B(f)$ exactly for all $f,h$.
+\end{lemma}
+
+\begin{proof}
+Write $c_A:=c(f)$ and $c_B:=c(\Pi_N f)$ and
+\[
+\alpha:=c'(f)[h]=\delta\,G'(m(f))\langle\phi,h\rangle,\qquad
+\beta:=c'(\Pi_N f)[\Pi_N h]=\delta\,G'(m(\Pi_N f))\langle\phi,\Pi_N h\rangle.
+\]
+Using the formulas for the Fr\'echet derivatives,
+\[
+DT_N^A(f)[h]=\Pi_NP_{c_A}\Pi_N h+\alpha\,\Pi_NQ_{c_A}\Pi_N f,
+\qquad
+DT_N^B(f)[h]=\Pi_NP_{c_B}\Pi_N h+\beta\,\Pi_NQ_{c_B}\Pi_N f.
+\]
+Hence
+\begin{align*}
+(DT_N^A-DT_N^B)[h]
+&=\Pi_N(P_{c_A}-P_{c_B})\Pi_N h
++(\alpha-\beta)\,\Pi_NQ_{c_A}\Pi_N f
++\beta\,\Pi_N(Q_{c_A}-Q_{c_B})\Pi_N f.
+\end{align*}
+We bound the three terms separately in $L^2$ (using $\|\Pi_N\|_{2\to2}=1$).
+
+\smallskip
+\noindent\textbf{(I) The $P$-mismatch.}
+By the one-dimensional mean value theorem in the parameter $c$,
+\[
+P_{c_A}-P_{c_B}=(c_A-c_B)\,Q_{c_\theta}
+\quad\text{for some }c_\theta=c_B+\theta(c_A-c_B).
+\]
+Thus
+\[
+\|\Pi_N(P_{c_A}-P_{c_B})\Pi_N h\|_2
+\le |c_A-c_B|\,\|Q_{c_\theta}\Pi_N h\|_2
+\le |c_A-c_B|\,C_J\,\|h\|_2
+\le |c_A-c_B|\,C_J\,\|h\|_{\mathcal A_\tau}.
+\]
+
+\smallskip
+\noindent\textbf{(II) The $c'$-mismatch.}
+We estimate
+\[
+|\alpha-\beta|
+\le |\delta|\,|G'(m(f))|\,|\langle\phi,h-\Pi_N h\rangle|
++|\delta|\,|\langle\phi,\Pi_N h\rangle|\,|G'(m(f))-G'(m(\Pi_N f))|.
+\]
+Since $\phi\in\mathcal A_\tau$,
+\[
+|\langle\phi,h-\Pi_N h\rangle|
+=|\langle (I-\Pi_N)\phi,h\rangle|
+\le \|(I-\Pi_N)\phi\|_2\,\|h\|_2
+\le e^{-2\pi\tau N}\|\phi\|_{\mathcal A_\tau}\,\|h\|_{\mathcal A_\tau}.
+\]
+Also $|\langle\phi,\Pi_N h\rangle|\le \|\phi\|_2\|h\|_2\le \|\phi\|_2\|h\|_{\mathcal A_\tau}$.
+Finally, by Lipschitz continuity of $G'$ (i.e.\ bounded $G''$),
+\[
+|G'(m(f))-G'(m(\Pi_N f))|
+\le L_{G'}\,|m(f)-m(\Pi_N f)|
+=L_{G'}\,|\langle (I-\Pi_N)\phi,f\rangle|
+\le L_{G'}\,e^{-2\pi\tau N}\|\phi\|_{\mathcal A_\tau}\,\|f\|_2.
+\]
+Combining gives
+\[
+|\alpha-\beta|
+\le e^{-2\pi\tau N}|\delta|\,\|\phi\|_{\mathcal A_\tau}\Bigl[
+L_G + L_{G'}\|\phi\|_2\,\|f\|_2
+\Bigr]\|h\|_{\mathcal A_\tau}.
+\]
+Therefore
+\[
+\|(\alpha-\beta)\Pi_NQ_{c_A}\Pi_N f\|_2
+\le |\alpha-\beta|\,C_J\,\|f\|_2
+\le e^{-2\pi\tau N}|\delta|\,\|\phi\|_{\mathcal A_\tau}\Bigl[
+L_G\,C_J\,\|f\|_2 + L_{G'}\|\phi\|_2\,C_J\,\|f\|_2^2
+\Bigr]\|h\|_{\mathcal A_\tau}.
+\]
+
+\smallskip
+\noindent\textbf{(III) The $Q$-mismatch.}
+Again by the mean value theorem,
+\[
+Q_{c_A}-Q_{c_B}=(c_A-c_B)\,R_{c_{\theta'}}.
+\]
+Hence
+\[
+\|\beta\,\Pi_N(Q_{c_A}-Q_{c_B})\Pi_N f\|_2
+\le |\beta|\,|c_A-c_B|\,\|R_{c_{\theta'}}\Pi_N f\|_2
+\le |\beta|\,|c_A-c_B|\,C_J^{(2)}\,\|f\|_2.
+\]
+Moreover $|\beta|\le |\delta|\,L_G\,\|\phi\|_2\,\|h\|_2\le |\delta|L_G\|\phi\|_2\|h\|_{\mathcal A_\tau}$.
+And (by Lipschitz continuity of $G$ and the same tail estimate)
+\[
+|c_A-c_B|
+=|\delta|\,|G(m(f))-G(m(\Pi_N f))|
+\le |\delta|\,\Lip(G)\,|m(f)-m(\Pi_N f)|
+\le |\delta|\,\Lip(G)\,e^{-2\pi\tau N}\|\phi\|_{\mathcal A_\tau}\,\|f\|_2.
+\]
+Thus
+\[
+\|\beta\,\Pi_N(Q_{c_A}-Q_{c_B})\Pi_N f\|_2
+\le e^{-2\pi\tau N}\,|\delta|^2\,L_G\,\Lip(G)\,\|\phi\|_2\,\|\phi\|_{\mathcal A_\tau}\,C_J^{(2)}\,\|f\|_2^2\,\|h\|_{\mathcal A_\tau}.
+\]
+
+\smallskip
+\noindent\textbf{Conclusion.}
+Summing (I)--(III) gives the displayed bound with $\mathcal C(f)$.
+The uniform bound on $\|f\|_{\mathcal A_\tau}\le K$ follows from $\|f\|_2\le K$.
+Finally, in the polynomial case with $\deg(\phi)\le N$ we have $m(\Pi_N f)=m(f)$ and
+$\langle\phi,\Pi_N h\rangle=\langle\phi,h\rangle$, hence $c_A=c_B$ and $\alpha=\beta$, so the difference is $0$.
+\end{proof}
+
+% % ============================================================
+% Corollary: NK for the TRUE self-consistent operator T in mixed norm,
+% certified from a fully discrete Fourier surrogate T_N.
+% Strong space: A_tau, weak space: L^2.
+% ============================================================
+
+\begin{corollary}[Mixed Newton--Kantorovich for $T$ via Fourier surrogate $T_N$]\label{cor:NK-mixed-true-T}
+Fix $\tau>0$, and set $\mathcal B_s:=\mathcal A_\tau(\T)$ and $\mathcal B_w:=L^2(\T)$
+(with $\|u\|_2\le \|u\|_{\mathcal A_\tau}$).
+Let $\Pi_N$ be the $L^2$-orthogonal projection onto Fourier modes $|k|\le N$.
+
+Let $\phi\in\mathcal A_\tau$ and define the coupling
+\[
+m(f):=\langle \phi,f\rangle_{L^2},\qquad c(f):=\delta\,G(m(f)),
+\]
+where $G\in C^2$ on the relevant range. Define the true self-consistent operator
+\[
+T(f):=P_{c(f)}f,
+\]
+where $P_c$ is the noisy (periodized Gaussian) shift-kernel operator, and set
+\[
+T_N(f):=T_N^B(f):=\Pi_N\,P_{c(\Pi_N f)}\,\Pi_N f
+\qquad\text{(fully discrete self-consistent map)}.
+\]
+Let $\ell\in(\mathcal B_w)^*$ be the normalization functional and consider the constrained
+fixed-point problem $T(f)=f$, $\ell(f)=1$; Newton is performed on $\ker\ell$.
+
+Assume the following uniform bounds (``LY-w'' / ``LY-s'' style hypotheses):
+\begin{align*}
+\text{(P-w)}\quad &\|P_c u\|_2\le \|u\|_2,\\
+\text{(P-s)}\quad &\|P_c u\|_{\mathcal A_\tau}\le S_{\tau,\sigma}\,\|u\|_2,\\
+\text{(Q-w)}\quad &\|Q_c u\|_2\le C_J\,\|u\|_2,\qquad Q_c:=\partial_c P_c,\\
+\text{(R-w)}\quad &\|R_c u\|_2\le C_J^{(2)}\,\|u\|_2,\qquad R_c:=\partial_c^2 P_c,
+\end{align*}
+and the analytic Fourier tail estimate
+\[
+\|(I-\Pi_N)g\|_2\le e^{-2\pi\tau N}\,\|g\|_{\mathcal A_\tau}.
+\]
+Denote the coupling constants on the relevant range
+\[
+L_G:=\sup|G'|,\qquad \mathrm{Lip}(G):=\sup_{x\neq y}\frac{|G(x)-G(y)|}{|x-y|},\qquad L_{G'}:=\sup|G''|.
+\]
+
+Let $\tilde f\in\mathrm{Ran}(\Pi_N)$ be a candidate with $\ell(\tilde f)=1$. Define the
+\emph{computable} quantities
+\[
+\delta_N:=\|T_N(\tilde f)-\tilde f\|_2,\qquad
+J_N:=\bigl(I-DT_N(\tilde f)\bigr)\big|_{\mathrm{Ran}(\Pi_N)\cap\ker\ell},\qquad
+M_N:=\|J_N^{-1}\|_{2\to 2},
+\]
+and the a priori size bounds
+\[
+K_2:=\|\tilde f\|_2,\qquad K_\tau:=\|\tilde f\|_{\mathcal A_\tau}.
+\]
+
+\smallskip
+\noindent\textbf{(1) Explicit residual bound for the true map.}
+Set the \emph{true residual}
+\[
+\Delta:=\|T(\tilde f)-\tilde f\|_2.
+\]
+Then
+\[
+\Delta \le \delta_N + e_T + e_{\mathrm{mis}},
+\]
+where
+\[
+e_T := e^{-2\pi\tau N}(S_{\tau,\sigma}+1)\,K_\tau,
+\qquad
+e_{\mathrm{mis}} := |\delta|\,\mathrm{Lip}(G)\,e^{-2\pi\tau N}\,\|\phi\|_{\mathcal A_\tau}\,C_J\,K_2^2.
+\]
+(In particular, if $\phi$ is a trigonometric polynomial of degree $\le N$, then
+$m(\Pi_N f)=m(f)$ and $e_{\mathrm{mis}}=0$.)
+
+\smallskip
+\noindent\textbf{(2) Last explicit bound: Jacobian discretization error.}
+Define the Jacobian mismatch
+\[
+\varepsilon_J:=\bigl\|DT(\tilde f)-DT_N(\tilde f)\bigr\|_{\mathcal A_\tau\to L^2}.
+\]
+Then one may take
+\[
+\varepsilon_J \ \le\ e^{-2\pi\tau N}(S_{\tau,\sigma}+1)
+\;+\;|\delta|L_G\|\phi\|_2\,K_\tau\,e^{-2\pi\tau N}\bigl(S^{(1)}_{\tau,\sigma}+C_J\bigr)
+\;+\; e^{-2\pi\tau N}\,C_{\mathrm{mis}}(K_2),
+\]
+where the (explicit) mismatch constant can be chosen as
+\[
+C_{\mathrm{mis}}(K_2):=
+|\delta|\,\|\phi\|_{\mathcal A_\tau}\Bigl[(\mathrm{Lip}(G)+L_G)C_JK_2
++L_{G'}\|\phi\|_2\,C_JK_2^2\Bigr]
++|\delta|^2\,L_G\mathrm{Lip}(G)\,\|\phi\|_2\,\|\phi\|_{\mathcal A_\tau}\,C_J^{(2)}K_2^2.
+\]
+(Again, if $\deg(\phi)\le N$ then $C_{\mathrm{mis}}(K_2)=0$.)
+
+\smallskip
+\noindent\textbf{(3) Certified inverse bound for the true Jacobian on $\ker\ell$.}
+If
+\[
+M_N\,\varepsilon_J < 1,
+\]
+then $J(\tilde f):=(I-DT(\tilde f))|_{\ker\ell}$ is invertible and
+\[
+M:=\|J(\tilde f)^{-1}\|_{2\to 2;\ker\ell}\ \le\ \frac{M_N}{1-M_N\varepsilon_J}.
+\]
+
+\smallskip
+\noindent\textbf{(4) Lipschitz constant for the differential (mixed norm).}
+On any $L^2$-ball $\{f:\|f\|_2\le K\}$, one may take the (explicit) Lipschitz constant
+\[
+\|DT(f)-DT(g)\|_{2\to 2}\ \le\ \gamma(K)\,\|f-g\|_2,
+\]
+with
+\[
+\gamma(K):=
+|\delta|\,\|\phi\|_2\,C_J\bigl(\mathrm{Lip}(G)+L_G\bigr)
+\;+\;|\delta|\,L_{G'}\,\|\phi\|_2^2\,C_J\,K
+\;+\;|\delta|^2\,L_G\mathrm{Lip}(G)\,\|\phi\|_2^2\,C_J^{(2)}\,K.
+\]
+(For the Kantorovich test below you may take any $K\ge \|\tilde f\|_2+r$; in practice one
+often starts with $K:=\|\tilde f\|_2$ and enlarges if needed.)
+
+\smallskip
+\noindent\textbf{(5) Kantorovich smallness and conclusion.}
+Let $K\ge \|\tilde f\|_2$ and define
+\[
+h:= M^2\,\gamma(K)\,\Delta.
+\]
+Assume
+\[
+h\le \frac12.
+\]
+Then there exists a \emph{unique} normalized fixed point $f^\ast$ of $T$ with $\ell(f^\ast)=1$ in
+the $L^2$-ball $B_r(\tilde f)$, and
+\[
+\|f^\ast-\tilde f\|_2\le r,
+\qquad
+r:=\frac{1-\sqrt{1-2h}}{M\,\gamma(K)}
+\quad\text{(interpreting $r:=M\Delta$ if $\gamma(K)=0$)}.
+\]
+Moreover, the Newton map on $\ell(f)=1$ is a contraction on $B_r(\tilde f)$ with contraction
+constant
+\[
+\kappa:=\frac{1-\sqrt{1-2h}}{h}\;<\;1.
+\]
+
+\smallskip
+\noindent\textbf{What must be computed numerically.}
+To apply the corollary you need only:
+\begin{enumerate}
+\item the Fourier candidate $\tilde f\in\mathrm{Ran}(\Pi_N)$ with $\ell(\tilde f)=1$;
+\item the finite-dimensional residual $\delta_N=\|T_N(\tilde f)-\tilde f\|_2$;
+\item the finite-dimensional Jacobian $J_N=(I-DT_N(\tilde f))$ on $\mathrm{Ran}(\Pi_N)\cap\ker\ell$
+and a certified bound $M_N=\|J_N^{-1}\|_{2\to 2}$;
+\item the norms $K_2=\|\tilde f\|_2$ and $K_\tau=\|\tilde f\|_{\mathcal A_\tau}$ (both explicit from Fourier coefficients).
+\end{enumerate}
+All remaining constants are explicit from $(\sigma,\tau,\delta,G,\phi)$ and the Gaussian bounds
+$S_{\tau,\sigma}$, $C_J$, $C_J^{(2)}$.
+\end{corollary}
+% ============================================================
+% Explicit Gaussian constants S_{tau,sigma}, S^{(1)}, S^{(2)}
+% for periodized Gaussian noise (Fourier multiplier).
+% ============================================================
+
+\begin{lemma}[Explicit Gaussian smoothing constants]\label{lem:S-constants-gaussian}
+Let $\bar\rho_\sigma$ be the periodized Gaussian on $\T$ with
+\[
+\widehat{\bar\rho_\sigma}(k)=e^{-2\pi^2\sigma^2k^2},\qquad k\in\mathbb Z.
+\]
+Define, for $\tau\ge 0$,
+\begin{align*}
+S_{\tau,\sigma}
+&:=\sup_{k\in\mathbb Z}\exp\!\bigl(2\pi\tau|k|-2\pi^2\sigma^2k^2\bigr),\\
+S^{(1)}_{\tau,\sigma}
+&:=\sup_{k\in\mathbb Z}(2\pi|k|)\exp\!\bigl(2\pi\tau|k|-2\pi^2\sigma^2k^2\bigr),\\
+S^{(2)}_{\tau,\sigma}
+&:=\sup_{k\in\mathbb Z}(2\pi|k|)^2\exp\!\bigl(2\pi\tau|k|-2\pi^2\sigma^2k^2\bigr).
+\end{align*}
+Then:
+\begin{enumerate}
+\item (\textbf{Exact computability}) Each supremum is attained at a finite $k$ and can be computed
+      by checking $k$ in a small neighborhood of the continuous maximizer:
+      \[
+      k_0:=\Bigl\lfloor \frac{\tau}{2\pi\sigma^2}\Bigr\rceil
+      \quad\Longrightarrow\quad
+      S_{\tau,\sigma}=\max\{f(k_0-1),f(k_0),f(k_0+1)\},
+      \]
+      where $f(k)=\exp(2\pi\tau|k|-2\pi^2\sigma^2k^2)$.
+      Similarly $S^{(1)}_{\tau,\sigma}$ and $S^{(2)}_{\tau,\sigma}$ are attained near the
+      continuous maximizers of $k\mapsto (2\pi k)^j e^{2\pi\tau k-2\pi^2\sigma^2k^2}$.
+
+\item (\textbf{Fully explicit bounds}) One has the closed-form upper bounds
+      \[
+      S_{\tau,\sigma}\le \exp\!\Bigl(\frac{\tau^2}{2\sigma^2}\Bigr),
+      \]
+      \[
+      S^{(1)}_{\tau,\sigma}\le \exp\!\Bigl(\frac{\tau^2}{2\sigma^2}\Bigr)
+      \Bigl(\frac{\tau}{\sigma^2}+\frac{1}{\sigma\sqrt{e}}\Bigr),
+      \]
+      \[
+      S^{(2)}_{\tau,\sigma}\le \exp\!\Bigl(\frac{\tau^2}{2\sigma^2}\Bigr)
+      \Bigl(\frac{\tau^2}{\sigma^4}+\frac{2\tau}{\sigma^3\sqrt{e}}+\frac{2}{\sigma^2 e}\Bigr).
+      \]
+      In particular (take $\tau=0$),
+      \[
+      C_J\le \frac{1}{\sigma\sqrt{e}},
+      \qquad
+      C_J^{(2)}\le \frac{2}{\sigma^2 e}.
+      \]
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+For $S_{\tau,\sigma}$, complete the square:
+\[
+2\pi\tau k-2\pi^2\sigma^2k^2
+=
+-2\pi^2\sigma^2\Bigl(k-\frac{\tau}{2\pi\sigma^2}\Bigr)^2+\frac{\tau^2}{2\sigma^2},
+\]
+so $\sup_k e^{2\pi\tau k-2\pi^2\sigma^2k^2}\le e^{\tau^2/(2\sigma^2)}$.
+For $S^{(1)}_{\tau,\sigma}$ write $k=b+y$ with $b=\tau/(2\pi\sigma^2)$ and use
+$k\le b+|y|$ together with
+\[
+\sup_{y\in\mathbb R}|y|e^{-a y^2}=\frac{1}{\sqrt{2ae}},
+\qquad a=2\pi^2\sigma^2,
+\]
+which yields the stated bound after multiplying by $2\pi e^{\tau^2/(2\sigma^2)}$.
+For $S^{(2)}_{\tau,\sigma}$ use $k^2\le b^2+2b|y|+y^2$ and
+\[
+\sup_{y\in\mathbb R}y^2e^{-a y^2}=\frac{1}{ae}.
+\]
+The ``exact computability'' follows because all these sequences are unimodal for $k\ge 0$
+and decay super-exponentially in $k$.
+\end{proof}
+
+\end{document}

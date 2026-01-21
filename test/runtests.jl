@@ -1,6 +1,7 @@
 using Test
 using SelfConsistentLogisticNoise
 using LinearAlgebra
+using BallArithmetic: mid, rad
 
 @testset "SelfConsistentLogisticNoise.jl" begin
 
@@ -283,6 +284,168 @@ using LinearAlgebra
         # Errors should decrease with N
         @test errors[2] < errors[1]
         @test errors[3] < errors[2]
+    end
+
+    # =========================================================================
+    # Krawczyk CAP Verification Tests
+    # =========================================================================
+
+    @testset "Krawczyk - Coordinate conversions" begin
+        N = 5  # 2N+1 = 11 full, 2N = 10 perp
+
+        # Test embed_perp
+        u_perp = collect(1:10) .+ 0.0im
+        u_full = embed_perp(u_perp, N)
+        @test length(u_full) == 2N + 1
+        @test u_full[N + 1] == 0  # k=0 should be zero
+        @test u_full[1:N] == u_perp[1:N]  # k = -N, ..., -1
+        @test u_full[N+2:2N+1] == u_perp[N+1:2N]  # k = 1, ..., N
+
+        # Test project_perp
+        v_full = collect(1:11) .+ 0.0im
+        v_perp = project_perp(v_full, N)
+        @test length(v_perp) == 2N
+        @test v_perp[1:N] == v_full[1:N]  # k = -N, ..., -1
+        @test v_perp[N+1:2N] == v_full[N+2:2N+1]  # k = 1, ..., N
+
+        # Round-trip: project(embed(u)) == u
+        @test project_perp(embed_perp(u_perp, N), N) == u_perp
+    end
+
+    @testset "Krawczyk - Index conversions" begin
+        N = 8
+
+        # Test perp_index
+        @test perp_index(-N, N) == 1
+        @test perp_index(-1, N) == N
+        @test perp_index(1, N) == N + 1
+        @test perp_index(N, N) == 2N
+
+        # Test perp_mode
+        @test perp_mode(1, N) == -N
+        @test perp_mode(N, N) == -1
+        @test perp_mode(N + 1, N) == 1
+        @test perp_mode(2N, N) == N
+
+        # Round-trip for all non-zero modes
+        for k in -N:N
+            k == 0 && continue
+            @test perp_mode(perp_index(k, N), N) == k
+        end
+    end
+
+    @testset "Krawczyk - Coupling constants" begin
+        # Linear coupling
+        c_lin = LinearCoupling(0.5)
+        Lip, L_G, L_Gp = SelfConsistentLogisticNoise.compute_coupling_constants(c_lin)
+        @test Lip == 1.0
+        @test L_G == 1.0
+        @test L_Gp == 0.0
+
+        # Tanh coupling
+        c_tanh = TanhCoupling(0.3, 2.0)
+        Lip_t, L_G_t, L_Gp_t = SelfConsistentLogisticNoise.compute_coupling_constants(c_tanh)
+        @test Lip_t == 1.0
+        @test L_G_t == 1.0
+        @test L_Gp_t > 0  # Should be 2/(β√3)
+        @test L_Gp_t ≈ 2 / (2.0 * sqrt(3))
+    end
+
+    @testset "Krawczyk - F_perp residual" begin
+        # Create a problem with δ=0 (no coupling)
+        prob = build_problem(a=3.83, σ=0.02, N=16, δ=0.0, cache=false)
+        N = prob.disc.N
+
+        # Solve for a fixed point
+        result = solve_fixed_point(prob; α=0.3, tol=1e-10, maxit=2000)
+        @test result.converged
+
+        # Compute F_perp at the converged solution
+        F_perp = compute_F_perp(prob, result.fhat)
+
+        # Residual should be small at a fixed point
+        F_norm = sqrt(sum(abs(mid(F_perp[i]))^2 for i in 1:2N))
+        @test F_norm < 1e-8
+    end
+
+    @testset "Krawczyk - J_perp matrix" begin
+        prob = build_problem(a=3.83, σ=0.02, N=8, δ=0.1, cache=false)
+        N = prob.disc.N
+
+        # Get a converged solution
+        result = solve_fixed_point(prob; α=0.3, tol=1e-10, maxit=2000)
+        @test result.converged
+
+        # Compute J_perp
+        J = compute_J_perp_matrix(prob, result.fhat)
+
+        # Check dimensions
+        @test size(J) == (2N, 2N)
+
+        # J should be invertible (not singular)
+        @test abs(det(J)) > 1e-10
+    end
+
+    @testset "Krawczyk - Jacobian Lipschitz" begin
+        prob = build_problem(a=3.83, σ=0.02, N=8, δ=0.1, cache=false)
+        N = prob.disc.N
+
+        # Create a test candidate
+        fhat = zeros(ComplexF64, 2N + 1)
+        fhat[idx(0, N)] = 1.0
+
+        # Compute Lipschitz constant
+        γ = compute_jacobian_lipschitz(prob, fhat)
+
+        # Should be positive and finite
+        @test γ > 0
+        @test isfinite(γ)
+    end
+
+    @testset "Krawczyk - Spectral norm bound" begin
+        using BallArithmetic
+
+        # Create a test matrix with Ball entries
+        n = 4
+        M = [Ball(0.1 * i * j + 0.0im, 0.01) for i in 1:n, j in 1:n]
+
+        # Compute bound
+        bound = SelfConsistentLogisticNoise.compute_spectral_norm_bound(M)
+
+        # Should be positive
+        @test bound > 0
+
+        # Should bound the actual spectral norm of midpoints
+        M_mid = [mid(M[i,j]) for i in 1:n, j in 1:n]
+        actual_norm = opnorm(M_mid)
+        @test bound >= actual_norm - 1e-10  # Allow small tolerance
+    end
+
+    @testset "Krawczyk - certify_krawczyk basic" begin
+        # Test with a well-conditioned case (small δ)
+        prob = build_problem(a=3.83, σ=0.05, N=8, δ=0.0, cache=false)
+
+        # Solve for a candidate
+        result = solve_fixed_point(prob; α=0.3, tol=1e-12, maxit=2000)
+        @test result.converged
+
+        # Try to verify (δ=0 should be easy)
+        kraw = certify_krawczyk(prob, result.fhat; verbose=false)
+
+        # With δ=0, verification should succeed (no coupling means simpler structure)
+        @test kraw.Y >= 0  # Y should always be non-negative
+        @test isfinite(kraw.Y)
+    end
+
+    @testset "Krawczyk - CAPResult structure" begin
+        # Create a minimal CAPResult
+        kraw = KrawczykResult(true, 1e-10, 0.5, 1e-8, 3, "")
+        cap = CAPResult(true, kraw, 1e-6, 1e-6 + 1e-8, zeros(ComplexF64, 5))
+
+        @test cap.verified == true
+        @test cap.krawczyk.verified == true
+        @test cap.truncation_error == 1e-6
+        @test cap.total_error ≈ 1e-6 + 1e-8
     end
 
 end
