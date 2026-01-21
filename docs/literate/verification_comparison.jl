@@ -49,6 +49,7 @@
 # ## Setup
 
 using SelfConsistentLogisticNoise
+using BallArithmetic: Ball, mid, rad
 using LinearAlgebra
 using Printf
 
@@ -151,10 +152,51 @@ else
     println("  Reason: $(kraw_result.reason)")
 end
 
-# ## Step 5: Full CAP Verification (Krawczyk + Truncation)
+# ## Step 5: Compare Jacobian Enclosures (Lipschitz vs Ball-range)
 
 println("\n" * "-"^70)
-println("Step 4: Full CAP Verification (Krawczyk + Truncation Error)")
+println("Step 4: Jacobian Enclosure Comparison")
+println("-"^70)
+
+J_0 = compute_J_perp_matrix(prob, fhat)
+A_0 = inv(J_0)
+
+Y_0 = kraw_result.Y
+
+function summarize_enclosure(label, J_ball)
+    AJ = A_0 * [mid(J_ball[i, j]) for i in 1:size(J_ball, 1), j in 1:size(J_ball, 2)]
+    M = zeros(Ball{Float64, ComplexF64}, size(J_ball, 1), size(J_ball, 2))
+    for i in 1:size(J_ball, 1)
+        for j in 1:size(J_ball, 2)
+            if i == j
+                M[i, j] = Ball(1.0 + 0.0im) - Ball(AJ[i, j])
+            else
+                M[i, j] = Ball(0.0 + 0.0im) - Ball(AJ[i, j])
+            end
+            J_rad = maximum(rad(J_ball[i, k]) for k in 1:size(J_ball, 1))
+            A_row_norm = sum(abs(A_0[i, k]) for k in 1:size(J_ball, 1))
+            M[i, j] = Ball(mid(M[i, j]), rad(M[i, j]) + A_row_norm * J_rad)
+        end
+    end
+    Z = SelfConsistentLogisticNoise.compute_spectral_norm_bound(M)
+    r_est = Y_0 / (1 - Z)
+    println("  $label:")
+    println("    Z = $Z")
+    println("    r = $r_est")
+end
+
+u_ball = [Ball(0.0 + 0.0im, kraw_result.r) for _ in 1:(2N)]
+J_ball_lip = compute_J_perp_ball(prob, fhat, u_ball)
+J_ball_range = compute_J_perp_ball_range(prob, fhat, u_ball)
+
+println("\nJacobian enclosure comparison (same radius r):")
+summarize_enclosure("Lipschitz inflation", J_ball_lip)
+summarize_enclosure("Ball range inclusion", J_ball_range)
+
+# ## Step 6: Full CAP Verification (Krawczyk + Truncation)
+
+println("\n" * "-"^70)
+println("Step 5: Full CAP Verification (Krawczyk + Truncation Error)")
 println("-"^70)
 
 # Run full CAP verification
@@ -172,7 +214,7 @@ else
     println("\nFULL CAP VERIFICATION: FAILED ✗")
 end
 
-# ## Step 6: Comparison
+# ## Step 7: Comparison
 
 println("\n" * "="^70)
 println("COMPARISON SUMMARY")
@@ -192,10 +234,10 @@ println("├──────────────────────�
         cap_result.verified ? "✓ YES" : "✗ NO")
 println("└────────────────────────┴─────────────────────┴─────────────────────┘")
 
-# ## Step 7: Convergence Analysis
+# ## Step 8: Convergence Analysis
 
 println("\n" * "-"^70)
-println("Step 5: Convergence Analysis (varying N)")
+println("Step 6: Convergence Analysis (varying N)")
 println("-"^70)
 
 Ns = [16, 32, 64]
@@ -239,10 +281,10 @@ for N_test in Ns
             kraw_test.verified ? "✓" : "✗")
 end
 
-# ## Step 8: Parameter Sensitivity
+# ## Step 9: Parameter Sensitivity
 
 println("\n" * "-"^70)
-println("Step 6: Coupling Strength Sensitivity (varying δ)")
+println("Step 7: Coupling Strength Sensitivity (varying δ)")
 println("-"^70)
 
 δs = [0.0, 0.05, 0.1, 0.2, 0.3]

@@ -10,6 +10,115 @@ using BallArithmetic: Ball, BallVector, BallMatrix, mid, rad, upper_bound_L2_opn
 using LinearAlgebra
 
 # ============================================================================
+# Ball arithmetic helpers (range inclusion)
+# ============================================================================
+
+"""
+    compute_m_ball(obs::Observable, fhat_ball, N)
+
+Compute m(f) = ⟨Φ, f⟩ for BallArithmetic inputs using range inclusion.
+"""
+function compute_m_ball(obs::CosineObservable, fhat_ball::AbstractVector, N::Int)
+    return real(fhat_ball[idx(1, N)])
+end
+
+function compute_m_ball(obs::SineObservable, fhat_ball::AbstractVector, N::Int)
+    return -imag(fhat_ball[idx(1, N)])
+end
+
+function compute_m_ball(obs::FourierObservable, fhat_ball::AbstractVector, N::Int)
+    result = zero(eltype(fhat_ball))
+    N_phi = (length(obs.Phihat) - 1) ÷ 2
+    for k in modes(min(N, N_phi))
+        result += obs.Phihat[idx(k, N_phi)] * conj(fhat_ball[idx(k, N)])
+    end
+    return real(result)
+end
+
+"""
+    compute_shift_ball(coupling, fhat_ball, N)
+
+Compute the shift c(f) = δ * G(m(f)) using BallArithmetic.
+"""
+function compute_shift_ball(coupling::Coupling, fhat_ball::AbstractVector, N::Int)
+    m = compute_m_ball(coupling.observable, fhat_ball, N)
+    return coupling(m)
+end
+
+(c::LinearCoupling)(m::Ball) = c.δ * m
+derivative(c::LinearCoupling, m::Ball) = c.δ
+
+(c::TanhCoupling)(m::Ball) = c.δ * tanh(c.β * m)
+derivative(c::TanhCoupling, m::Ball) = c.δ * c.β * sech(c.β * m)^2
+
+"""
+    compute_DT_matrix_ball(prob::SCProblem, fhat_ball)
+
+Compute DT(f) using BallArithmetic inputs for range inclusion.
+"""
+function compute_DT_matrix_ball(prob::SCProblem, fhat_ball::AbstractVector)
+    N = prob.disc.N
+    c = compute_shift_ball(prob.coupling, fhat_ball, N)
+
+    A = Matrix{eltype(fhat_ball)}(undef, 2N + 1, 2N + 1)
+    for k in modes(N)
+        k_idx = idx(k, N)
+        factor = rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        for m in modes(N)
+            m_idx = idx(m, N)
+            A[k_idx, m_idx] = factor * prob.B[k_idx, m_idx]
+        end
+    end
+
+    obs = get_observable(prob.coupling)
+    m_val = compute_m_ball(obs, fhat_ball, N)
+    Gp = derivative(prob.coupling, m_val)
+
+    a = zeros(eltype(fhat_ball), 2N + 1)
+    if obs isa CosineObservable
+        a[idx(1, N)] = 0.5 * Gp
+        a[idx(-1, N)] = 0.5 * Gp
+    elseif obs isa SineObservable
+        a[idx(1, N)] = -0.5im * Gp
+        a[idx(-1, N)] = 0.5im * Gp
+    elseif obs isa FourierObservable
+        N_phi = (length(obs.Phihat) - 1) ÷ 2
+        for k in modes(min(N, N_phi))
+            a[idx(k, N)] = obs.Phihat[idx(k, N_phi)] * Gp
+        end
+    else
+        error("Observable type not supported for Ball Jacobian enclosure")
+    end
+
+    Bf = zeros(eltype(fhat_ball), 2N + 1)
+    for k in modes(N)
+        k_idx = idx(k, N)
+        acc = zero(eltype(fhat_ball))
+        for m in modes(N)
+            m_idx = idx(m, N)
+            acc += prob.B[k_idx, m_idx] * fhat_ball[m_idx]
+        end
+        Bf[k_idx] = acc
+    end
+
+    b = zeros(eltype(fhat_ball), 2N + 1)
+    for k in modes(N)
+        k_idx = idx(k, N)
+        factor = (-2π * im * k) * rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        b[k_idx] = factor * Bf[k_idx]
+    end
+
+    DT = Matrix{eltype(fhat_ball)}(undef, 2N + 1, 2N + 1)
+    for i in 1:2N+1
+        for j in 1:2N+1
+            DT[i, j] = A[i, j] + b[i] * conj(a[j])
+        end
+    end
+
+    return DT
+end
+
+# ============================================================================
 # Coordinate conventions: Full ↔ Perp (mean-zero constraint)
 # ============================================================================
 
@@ -238,6 +347,45 @@ function compute_J_perp_ball(prob::SCProblem, fhat_base::Vector{ComplexF64},
 end
 
 """
+    compute_J_perp_ball_range(prob::SCProblem, fhat_base::Vector{ComplexF64},
+                              u_ball::Vector{<:Ball})
+
+Compute a Jacobian enclosure by evaluating DT on the Ball vector and
+using the range inclusion property instead of a Lipschitz inflation.
+"""
+function compute_J_perp_ball_range(prob::SCProblem, fhat_base::Vector{ComplexF64},
+                                   u_ball::Vector{<:Ball})
+    N = prob.disc.N
+    dim_perp = 2N
+
+    u_full = embed_perp(u_ball, N)
+    fhat_ball = [Ball(fhat_base[i]) + u_full[i] for i in 1:2N+1]
+
+    DT_ball = compute_DT_matrix_ball(prob, fhat_ball)
+
+    J_full = Matrix{eltype(fhat_ball)}(undef, 2N + 1, 2N + 1)
+    for i in 1:2N+1
+        for j in 1:2N+1
+            identity_entry = i == j ? Ball(1.0 + 0.0im) : Ball(0.0 + 0.0im)
+            J_full[i, j] = identity_entry - DT_ball[i, j]
+        end
+    end
+
+    J_perp = Matrix{eltype(fhat_ball)}(undef, dim_perp, dim_perp)
+    for i in 1:dim_perp
+        k_i = perp_mode(i, N)
+        full_i = k_i + N + 1
+        for j in 1:dim_perp
+            k_j = perp_mode(j, N)
+            full_j = k_j + N + 1
+            J_perp[i, j] = J_full[full_i, full_j]
+        end
+    end
+
+    return J_perp
+end
+
+"""
     compute_jacobian_lipschitz(prob::SCProblem, fhat::Vector{ComplexF64})
 
 Compute the Lipschitz constant γ for the Jacobian:
@@ -256,12 +404,8 @@ function compute_jacobian_lipschitz(prob::SCProblem, fhat::Vector{ComplexF64})
     obs = get_observable(prob.coupling)
     phi_norm_2 = compute_observable_L2_norm(obs, N)
 
-    # Gaussian derivative constants
-    # C_J = ||ρ'_σ||_2, C_J^{(2)} = ||ρ''_σ||_2
-    # For Gaussian: ρ(x) = (2πσ²)^{-1/2} exp(-x²/(2σ²))
-    # ρ'(x) = -x/σ² ρ(x), so ||ρ'||_2 = (2σ)^{-1} (2π)^{-1/4} σ^{-1/2}
-    C_J = 1 / (2 * σ * sqrt(2 * π * σ^2))
-    C_J_2 = 1 / (σ^2) * sqrt(3 / (8 * π * σ^2))  # Approximate
+    # Periodized Gaussian derivative constants (rigorous L2 norms on the torus)
+    C_J, C_J_2 = periodized_gaussian_derivative_norms(σ)
 
     # Coupling function constants
     # For linear coupling G(m) = m: Lip(G) = 1, L_G = 1, L_{G'} = 0
@@ -277,6 +421,47 @@ function compute_jacobian_lipschitz(prob::SCProblem, fhat::Vector{ComplexF64})
     γ += abs(δ)^2 * L_G * Lip_G * phi_norm_2^2 * C_J_2 * K_2
 
     return γ
+end
+
+"""
+    periodized_gaussian_derivative_norms(σ; K_start=1, K_max=10_000)
+
+Compute rigorous upper bounds for the L2 norms of the derivatives of the
+periodized Gaussian kernel on the torus:
+
+    ||ρ'_σ||_2^2 = Σ_{k∈ℤ} (2πk)^2 exp(-4π²σ²k²)
+    ||ρ''_σ||_2^2 = Σ_{k∈ℤ} (2πk)^4 exp(-4π²σ²k²)
+
+The series are split into a finite sum and a geometric tail bound using the
+ratio at k = K. Returns (C_J, C_J_2).
+"""
+function periodized_gaussian_derivative_norms(σ::Real; K_start::Int=1, K_max::Int=10_000)
+    σ <= 0 && error("σ must be positive")
+    a = 4 * π^2 * σ^2
+
+    function tail_bound(p::Int)
+        K = K_start
+        while K <= K_max
+            ratio = ((K + 1) / K)^p * exp(-a * (2K + 1))
+            if ratio < 1
+                term_K = (2π * K)^p * exp(-a * K^2)
+                return K, term_K / (1 - ratio)
+            end
+            K += 1
+        end
+        error("Failed to find tail bound with ratio < 1 up to K_max=$K_max")
+    end
+
+    function series_with_tail(p::Int)
+        K, tail = tail_bound(p)
+        finite = sum((2π * k)^p * exp(-a * k^2) for k in 1:K-1)
+        return 2 * (finite + tail)
+    end
+
+    C_J = sqrt(series_with_tail(2))
+    C_J_2 = sqrt(series_with_tail(4))
+
+    return C_J, C_J_2
 end
 
 """
@@ -633,6 +818,7 @@ end
 # Exports
 export embed_perp, project_perp, perp_index, perp_mode
 export compute_F_perp, compute_J_perp_matrix, compute_J_perp_ball
+export compute_J_perp_ball_range
 export compute_jacobian_lipschitz
 export KrawczykResult, certify_krawczyk
 export CAPResult, verify_fixed_point_CAP, print_CAP_certificate
