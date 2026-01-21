@@ -407,7 +407,8 @@ function verify_fixed_point(
     J_N = I - compute_jacobian_on_ker_ell(DT, N)  # J_N = I - DT_N on ker ℓ
 
     # Convert to BallMatrix for rigorous computation
-    J_N_ball = BallMatrix(J_N)
+    # Use zero radii since J_N comes from exact arithmetic
+    J_N_ball = to_ball_matrix(J_N, 0.0)
 
     # M_N = ‖J_N⁻¹‖_{2→2} via rigorous SVD
     M_N = svd_bound_L2_opnorm_inverse(J_N_ball)
