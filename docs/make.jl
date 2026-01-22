@@ -17,7 +17,8 @@ mkpath(lit_out_dir)
 for file in examples
     input = joinpath(lit_in_dir, file)
     name = splitext(file)[1]
-    Literate.markdown(input, lit_out_dir; name=name, documenter=true, execute=false)
+    # Render as plain markdown (no @example blocks) to avoid executing heavy runs.
+    Literate.markdown(input, lit_out_dir; name=name, documenter=false, execute=false)
 end
 
 makedocs(;
