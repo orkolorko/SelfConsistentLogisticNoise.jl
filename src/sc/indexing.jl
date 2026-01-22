@@ -1,5 +1,5 @@
 # Fourier indexing utilities for truncated Fourier series
-# Densities are represented as: f(x) ≈ Σ_{k=-N}^{N} f̂_k e^{2πikx}
+# Densities are represented as: f(x) ≈ Σ_{k=-N}^{N} f̂_k e^{iπkx} on [-1,1]
 # Stored as a length L = 2N+1 vector
 
 """

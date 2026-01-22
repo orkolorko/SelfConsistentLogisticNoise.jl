@@ -34,6 +34,8 @@ end
     assemble_PN_rigorous(Ttilde_ball::Vector{<:Ball}, N, σ_rds::Ball)
 
 Rigorous assembly with Ball inputs.
+
+Note: Uses Ball(π, eps(Float64(π))) to properly enclose π with its rounding error.
 """
 function assemble_PN_rigorous(Ttilde_ball::Vector{<:Ball}, N::Int,
                               σ_rds::Ball; verbose::Bool=false)
@@ -44,8 +46,10 @@ function assemble_PN_rigorous(Ttilde_ball::Vector{<:Ball}, N::Int,
     # Ball{Float64, ComplexF64} is the type for complex balls
     P = Matrix{Ball{Float64, ComplexF64}}(undef, dim, dim)
 
-    # Constants
-    π_ball = Ball(π)
+    # Constants with proper error enclosure
+    # Ball(π) with radius eps(π) to account for Float64 representation error
+    π_val = Float64(π)
+    π_ball = Ball(π_val, eps(π_val))
     im_ball = Ball(0.0 + 1.0im)  # Complex Ball for imaginary unit
 
     for k in -N:N

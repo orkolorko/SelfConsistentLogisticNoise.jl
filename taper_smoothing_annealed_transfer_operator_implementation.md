@@ -171,6 +171,19 @@ Use the second-order bound
 \]
 valid for Gaussian convolution (on the line; on the torus it remains valid with the same constant).
 
+For reference, Lemma~\(\ref{lem:smoothing_bounds}\) in Version6.tex gives the sharper first-order alternative when only a \(W^{1,\infty}\) bound is available:
+\[
+\|f-G_{\sigma_{\rm sm}}f\|_\infty
+\le
+\sqrt{\frac{2}{\pi}}\,\sigma_{\rm sm}\,\|f'\|_\infty,
+\]
+and if \(f\in W^{2,\infty}(\mathbb T_2)\),
+\[
+\|f-G_{\sigma_{\rm sm}}f\|_\infty
+\le
+\frac{\sigma_{\rm sm}^2}{2}\,\|f''\|_\infty.
+\]
+
 For tapered \(T_\eta\), \(\|T_\eta''\|_\infty\) grows like \(O((a+1)/\eta)\) because tapering introduces curvature in the collar. If your smoothstep satisfies \(\|w'_\eta\|_\infty \lesssim C_1/\eta\), a safe bound is
 \[
 \boxed{\;\|T_\eta''\|_\infty \le 2(a+1)\Bigl(1+\frac{C_1}{\eta}\Bigr)\;}
@@ -466,4 +479,3 @@ For each parameter set \((N,M,\eta,\sigma_{\rm sm},\sigma_{\rm rds})\), output:
 
 Everything above works for any \(T\) you can sample and bound in sup norm and (for smoothing error) a bound on \(\|T_\eta''\|_\infty\).
 For non-smooth maps (e.g. \(|x|^\alpha\)), tapering + smoothing is even more valuable, because smoothing restores analytic-like Fourier decay.
-

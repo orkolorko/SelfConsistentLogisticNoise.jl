@@ -4,9 +4,9 @@
     apply_Pc(prob::SCProblem, fhat::Vector{ComplexF64}, c::Float64)
 
 Apply the noisy transfer operator with shift c:
-    (P_c f)̂_k = ρ̂_σ(k) * e^{-2πikc} * (B_a f̂)_k
+    (P_c f)̂_k = ρ̂_σ(k) * e^{-iπkc} * (B_a f̂)_k
 
-where ρ̂_σ(k) = exp(-2π²σ²k²) is the Gaussian kernel.
+where ρ̂_σ(k) = exp(-(π²/2)σ²k²) is the Gaussian kernel.
 """
 function apply_Pc(prob::SCProblem, fhat::Vector{ComplexF64}, c::Float64)
     N = prob.disc.N
@@ -19,7 +19,7 @@ function apply_Pc(prob::SCProblem, fhat::Vector{ComplexF64}, c::Float64)
     for k in modes(N)
         k_idx = idx(k, N)
         gauss = rhohat(prob.noise, k)
-        phase = exp(-2π * im * k * c)
+        phase = exp(-π * im * k * c)
         result[k_idx] = gauss * phase * tmp[k_idx]
     end
 
@@ -41,7 +41,7 @@ function apply_Pc!(result::Vector{ComplexF64}, prob::SCProblem, fhat::Vector{Com
     for k in modes(N)
         k_idx = idx(k, N)
         gauss = rhohat(prob.noise, k)
-        phase = exp(-2π * im * k * c)
+        phase = exp(-π * im * k * c)
         result[k_idx] *= gauss * phase
     end
 
@@ -71,7 +71,7 @@ function reconstruct_density(fhat::Vector{ComplexF64}, xgrid::AbstractVector)
     for (i, x) in enumerate(xgrid)
         val = zero(ComplexF64)
         for k in modes(N)
-            val += fhat[idx(k, N)] * exp(2π * im * k * x)
+            val += fhat[idx(k, N)] * exp(π * im * k * x)
         end
         f[i] = real(val)
     end
@@ -85,6 +85,6 @@ end
 Reconstruct density on a uniform grid with npts points.
 """
 function reconstruct_density(fhat::Vector{ComplexF64}; npts::Int=1000)
-    xgrid = range(0, 1, length=npts)
+    xgrid = range(-1, 1, length=npts)
     return collect(xgrid), reconstruct_density(fhat, xgrid)
 end

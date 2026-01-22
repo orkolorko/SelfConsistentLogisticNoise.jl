@@ -10,7 +10,7 @@ abstract type Observable end
 """
     CosineObservable()
 
-Default observable Φ(x) = cos(2πx).
+Default observable Φ(x) = cos(πx).
 Fourier coefficients: Φ̂₁ = Φ̂₋₁ = 1/2, others = 0.
 
 For this observable: m(f) = Re(f̂₁)
@@ -21,7 +21,7 @@ struct CosineObservable <: Observable end
     compute_m(obs::CosineObservable, fhat, N)
 
 Compute m(f) = ⟨Φ, f⟩ for the cosine observable.
-For Φ(x) = cos(2πx): m(f) = Re(f̂₁)
+For Φ(x) = cos(πx): m(f) = Re(f̂₁)
 """
 function compute_m(obs::CosineObservable, fhat::Vector{ComplexF64}, N::Int)
     # Mode k=1 is at index idx(1, N) = N + 2
@@ -31,7 +31,7 @@ end
 """
     SineObservable()
 
-Observable Φ(x) = sin(2πx).
+Observable Φ(x) = sin(πx).
 For this observable: m(f) = -Im(f̂₁)
 """
 struct SineObservable <: Observable end

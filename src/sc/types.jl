@@ -1,21 +1,22 @@
-# Core types for self-consistent logistic noise computations
+# Core types for self-consistent quadratic-noise computations
 
 """
-    LogisticMap(a)
+    QuadraticMap(a)
 
-Logistic map T_a(x) = a*x*(1-x) on the torus.
+Quadratic map T_a(x) = a - (a+1)x^2 on the period-2 torus [-1,1].
 """
-struct LogisticMap
+struct QuadraticMap
     a::Float64
 end
 
-(T::LogisticMap)(x) = T.a * x * (1 - x)
+(T::QuadraticMap)(x) = T.a - (T.a + 1) * x^2
+derivative(T::QuadraticMap, x) = -2 * (T.a + 1) * x
 
 """
     GaussianNoise(σ)
 
-Periodized Gaussian noise kernel on the torus with standard deviation σ.
-Fourier coefficients: ρ̂_σ(k) = exp(-2π²σ²k²)
+Periodized Gaussian noise kernel on the period-2 torus with standard deviation σ.
+Fourier coefficients: ρ̂_σ(k) = exp(-(π²/2)σ²k²)
 """
 struct GaussianNoise
     σ::Float64
@@ -26,7 +27,7 @@ end
 
 Fourier coefficient of the periodized Gaussian kernel at mode k.
 """
-rhohat(noise::GaussianNoise, k::Int) = exp(-2 * π^2 * noise.σ^2 * k^2)
+rhohat(noise::GaussianNoise, k::Int) = exp(-0.5 * π^2 * noise.σ^2 * k^2)
 
 """
     FourierDisc(N, M)
@@ -64,9 +65,12 @@ Self-consistent problem specification containing all parameters
 and the precomputed B matrix.
 """
 mutable struct SCProblem
-    map::LogisticMap
+    map::QuadraticMap
     noise::GaussianNoise
     disc::FourierDisc
     coupling::Any  # Coupling type
     B::Matrix{ComplexF64}  # Precomputed transfer operator matrix
+    map_params::Any
+    map_error::Any
+    operator_error::Any
 end

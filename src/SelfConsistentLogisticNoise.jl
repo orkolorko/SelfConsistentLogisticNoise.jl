@@ -13,6 +13,9 @@ using IntervalArithmetic
 # Fourier indexing utilities
 include("sc/indexing.jl")
 
+# Rigorous constants (must be loaded early, before other modules use them)
+include("sc/rigorous_constants.jl")
+
 # Core types
 include("sc/types.jl")
 
@@ -63,17 +66,33 @@ include("annealed/OperatorBounds.jl")
 include("annealed/RigorousAssembly.jl")
 
 # Exports
-export LogisticMap, GaussianNoise, FourierDisc, rhohat
+export QuadraticMap, GaussianNoise, FourierDisc, rhohat
 export Observable, CosineObservable, Coupling
 export LinearCoupling, TanhCoupling
 export SCProblem
 export modes, idx, mode
 export build_B, apply_Pc, compute_m
+export bound_fft_aliasing_entry_error, bound_fft_aliasing_opnorm
+export fft_aliasing_bound_matrix
 export get_observable, get_delta
 export solve_fixed_point, solve_newton, solve_hybrid, FixedPointResult
 export sweep_delta, sweep_delta_a
 export reconstruct_density
 export save_result, load_result
+
+# Rigorous constants exports
+export pi_interval, e_interval, sqrt_interval, exp_interval
+export sqrt_2_inv_upper, sqrt_2_inv_interval
+export sqrt_3_inv_upper, sqrt_3_inv_interval
+export sqrt_2_over_pi_upper, sqrt_2_over_pi_interval
+export sqrt_pi_interval, sqrt_e_inv_upper, sqrt_e_inv_interval
+export pi_sq_interval
+export periodized_gaussian_derivative_norms_rigorous
+export GaussianConstantsRigorous
+export compute_gaussian_constants_rigorous, compute_gaussian_constants_bounds_rigorous
+export CouplingConstantsRigorous
+export compute_tanh_coupling_constants_rigorous, compute_linear_coupling_constants_rigorous
+export cosine_observable_L2_norm_rigorous, cosine_observable_L2_norm_interval
 
 # Rigorous verification exports
 export GaussianConstants, compute_gaussian_constants

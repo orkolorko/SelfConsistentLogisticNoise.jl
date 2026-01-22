@@ -2,6 +2,7 @@
 # Based on Corollary 1 from the theory document
 
 using BallArithmetic: Ball, BallMatrix, mid, rad, svd_bound_L2_opnorm_inverse
+using IntervalArithmetic: interval
 
 export GaussianConstants, compute_gaussian_constants
 export RigorousResult, verify_fixed_point
@@ -10,9 +11,9 @@ export compute_jacobian_matrix, compute_residual_bounds
 #=============================================================================
   Gaussian smoothing constants (Lemma 13)
 
-  S_{τ,σ}   := sup_k exp(2πτ|k| - 2π²σ²k²)
-  S^(1)_{τ,σ} := sup_k (2π|k|) exp(2πτ|k| - 2π²σ²k²)
-  S^(2)_{τ,σ} := sup_k (2π|k|)² exp(2πτ|k| - 2π²σ²k²)
+  S_{τ,σ}   := sup_k exp(πτ|k| - (π²/2)σ²k²)
+  S^(1)_{τ,σ} := sup_k (π|k|) exp(πτ|k| - (π²/2)σ²k²)
+  S^(2)_{τ,σ} := sup_k (π|k|)² exp(πτ|k| - (π²/2)σ²k²)
 =============================================================================#
 
 """
@@ -32,59 +33,23 @@ end
     compute_gaussian_constants(σ, τ)
 
 Compute the Gaussian smoothing constants for given σ and τ.
-Uses exact computation by checking k near the continuous maximizer.
+Uses rigorous interval arithmetic to ensure correct upper bounds.
 """
 function compute_gaussian_constants(σ::Float64, τ::Float64)
-    # For S_{τ,σ}: maximizer near k₀ = τ/(2πσ²)
-    k0 = ceil(Int, τ / (2π * σ^2))
-
-    f(k) = exp(2π * τ * abs(k) - 2π^2 * σ^2 * k^2)
-    f1(k) = (2π * abs(k)) * f(k)
-    f2(k) = (2π * abs(k))^2 * f(k)
-
-    # S_{τ,σ}: check neighborhood of k₀
-    S_τσ = maximum(f(k) for k in max(0, k0-2):k0+2)
-
-    # S^(1)_{τ,σ}: maximizer of k * exp(...)
-    # Derivative: (1 - 4π²σ²k + 2πτ) * exp(...) = 0 => k = (1 + 2πτ)/(4π²σ²)
-    k1 = ceil(Int, (1 + 2π * τ) / (4π^2 * σ^2))
-    S1_τσ = maximum(f1(k) for k in max(1, k1-2):k1+2)
-
-    # S^(2)_{τ,σ}: maximizer of k² * exp(...)
-    k2 = ceil(Int, (2 + 2π * τ) / (4π^2 * σ^2))
-    S2_τσ = maximum(f2(k) for k in max(1, k2-2):k2+2)
-
-    # For τ = 0 cases (simpler)
-    g(k) = exp(-2π^2 * σ^2 * k^2)
-    g1(k) = (2π * k) * g(k)
-    g2(k) = (2π * k)^2 * g(k)
-
-    # S^(1)_{0,σ}: maximizer at k = 1/(2πσ²√2)
-    k1_0 = max(1, ceil(Int, 1 / (2π * σ^2 * sqrt(2))))
-    S1_0σ = maximum(g1(k) for k in max(1, k1_0-2):k1_0+2)
-
-    # S^(2)_{0,σ}: maximizer at k = 1/(πσ²√2)
-    k2_0 = max(1, ceil(Int, 1 / (π * σ^2 * sqrt(2))))
-    S2_0σ = maximum(g2(k) for k in max(1, k2_0-2):k2_0+2)
-
-    return GaussianConstants(S_τσ, S1_τσ, S2_τσ, S1_0σ, S2_0σ)
+    # Use the rigorous version from rigorous_constants.jl
+    gc_rig = compute_gaussian_constants_rigorous(σ, τ)
+    return GaussianConstants(gc_rig.S_τσ, gc_rig.S1_τσ, gc_rig.S2_τσ, gc_rig.S1_0σ, gc_rig.S2_0σ)
 end
 
 """
     compute_gaussian_constants_bounds(σ, τ)
 
-Compute explicit upper bounds (Lemma 13) - useful when exact computation is not needed.
+Compute explicit rigorous upper bounds (Lemma 13) using interval arithmetic.
 """
 function compute_gaussian_constants_bounds(σ::Float64, τ::Float64)
-    exp_factor = exp(τ^2 / (2σ^2))
-
-    S_τσ = exp_factor
-    S1_τσ = exp_factor * (τ / σ^2 + 1 / (σ * sqrt(ℯ)))
-    S2_τσ = exp_factor * (τ^2 / σ^4 + 2τ / (σ^3 * sqrt(ℯ)) + 2 / (σ^2 * ℯ))
-    S1_0σ = 1 / (σ * sqrt(ℯ))
-    S2_0σ = 2 / (σ^2 * ℯ)
-
-    return GaussianConstants(S_τσ, S1_τσ, S2_τσ, S1_0σ, S2_0σ)
+    # Use the rigorous version from rigorous_constants.jl
+    gc_rig = compute_gaussian_constants_bounds_rigorous(σ, τ)
+    return GaussianConstants(gc_rig.S_τσ, gc_rig.S1_τσ, gc_rig.S2_τσ, gc_rig.S1_0σ, gc_rig.S2_0σ)
 end
 
 #=============================================================================
@@ -132,7 +97,7 @@ end
 
   DT_N(f) = A(c_N) + b_N ⊗ a_N*
 
-  where A(c)_{k,m} = ρ̂_σ(k) e^{-2πikc} V_k(m)
+  where A(c)_{k,m} = ρ̂_σ(k) e^{-iπkc} V_k(m)
 =============================================================================#
 
 """
@@ -145,12 +110,12 @@ function compute_jacobian_matrix(prob::SCProblem, fhat::Vector{ComplexF64})
     N = prob.disc.N
     c = compute_shift(prob.coupling, fhat, N)
 
-    # A(c)_{k,m} = ρ̂_σ(k) e^{-2πikc} B_{k,m}
+    # A(c)_{k,m} = ρ̂_σ(k) e^{-iπkc} B_{k,m}
     # where B is the precomputed transfer matrix
     A = similar(prob.B)
     for k in modes(N)
         k_idx = idx(k, N)
-        factor = rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        factor = rhohat(prob.noise, k) * exp(-π * im * k * c)
         for m in modes(N)
             m_idx = idx(m, N)
             A[k_idx, m_idx] = factor * prob.B[k_idx, m_idx]
@@ -177,12 +142,12 @@ function compute_jacobian_matrix(prob::SCProblem, fhat::Vector{ComplexF64})
     end
     a .*= Gp  # Note: δ is already in Gp for our coupling types
 
-    # b_N = B(c) f̂  where B(c)_{k,m} = (-2πik) ρ̂_σ(k) e^{-2πikc} V_k(m)
+    # b_N = B(c) f̂  where B(c)_{k,m} = (-iπk) ρ̂_σ(k) e^{-iπkc} V_k(m)
     b = zeros(ComplexF64, 2N + 1)
     Bf = prob.B * fhat
     for k in modes(N)
         k_idx = idx(k, N)
-        factor = (-2π * im * k) * rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        factor = (-π * im * k) * rhohat(prob.noise, k) * exp(-π * im * k * c)
         b[k_idx] = factor * Bf[k_idx]
     end
 
@@ -218,7 +183,8 @@ struct ResidualBounds
     δ_N::Float64    # Finite-dimensional residual ‖T_N(f̃) - f̃‖₂
     e_T::Float64    # Truncation error
     e_mis::Float64  # Mismatch error (0 if φ is trig polynomial)
-    Δ::Float64      # Total: δ_N + e_T + e_mis
+    e_map::Float64  # Map approximation error
+    Δ::Float64      # Total: δ_N + e_T + e_mis + e_map
 end
 
 """
@@ -240,8 +206,8 @@ function compute_residual_bounds(
     # K_2 = ‖f̃‖_2
     K2 = norm(fhat)
 
-    # K_τ = ‖f̃‖_{A_τ} = sqrt(Σ_k e^{4πτ|k|} |f̂_k|²)
-    Kτ = sqrt(sum(exp(4π * τ * abs(k)) * abs(fhat[idx(k, N)])^2 for k in modes(N)))
+    # K_τ = ‖f̃‖_{A_τ} = sqrt(Σ_k e^{2πτ|k|} |f̂_k|²)
+    Kτ = sqrt(sum(exp(2π * τ * abs(k)) * abs(fhat[idx(k, N)])^2 for k in modes(N)))
 
     # Compute T_N(f̃)
     TN_f = apply_self_consistent(prob, fhat)
@@ -249,21 +215,29 @@ function compute_residual_bounds(
     # δ_N = ‖T_N(f̃) - f̃‖_2
     δ_N = norm(TN_f - fhat)
 
-    # e_T = exp(-2πτN) (S_{τ,σ} + 1) K_τ
-    e_T = exp(-2π * τ * N) * (gc.S_τσ + 1) * Kτ
+    # e_T = exp(-πτN) (S_{τ,σ} + 1) K_τ
+    e_T = exp(-π * τ * N) * (gc.S_τσ + 1) * Kτ
 
-    # e_mis = |δ| Lip(G) exp(-2πτN) ‖φ‖_{A_τ} S^(1)_{0,σ} K_2²
+    # e_mis = |δ| Lip(G) exp(-πτN) ‖φ‖_{A_τ} S^(1)_{0,σ} K_2²
     # (This is 0 if φ is a trig polynomial of degree ≤ N, e.g., cosine observable)
     obs = get_observable(prob.coupling)
     if obs isa CosineObservable && N >= 1
-        e_mis = 0.0  # φ = cos(2πx) has degree 1
+        e_mis = 0.0  # φ = cos(πx) has degree 1
     else
-        e_mis = abs(δ) * cc.Lip_G * exp(-2π * τ * N) * phi_norm_Aτ * gc.S1_0σ * K2^2
+        e_mis = abs(δ) * cc.Lip_G * exp(-π * τ * N) * phi_norm_Aτ * gc.S1_0σ * K2^2
     end
 
-    Δ = δ_N + e_T + e_mis
+    e_map = 0.0
+    if !(prob.map_params === nothing)
+        # L2 perturbation bound via ||ρ'_σ||_2 * ||T - T̃||_∞.
+        C_J, _ = periodized_gaussian_derivative_norms(prob.noise.σ)
+        map_sup_error = bound_map_sup_error(prob.map_params)
+        e_map = C_J * map_sup_error
+    end
 
-    return ResidualBounds(δ_N, e_T, e_mis, Δ), K2, Kτ
+    Δ = δ_N + e_T + e_mis + e_map
+
+    return ResidualBounds(δ_N, e_T, e_mis, e_map, Δ), K2, Kτ
 end
 
 #=============================================================================
@@ -289,11 +263,11 @@ function compute_jacobian_error(
     N = prob.disc.N
     δ = get_delta(prob.coupling)
 
-    # First term: exp(-2πτN)(S_{τ,σ} + 1)
-    term1 = exp(-2π * τ * N) * (gc.S_τσ + 1)
+    # First term: exp(-πτN)(S_{τ,σ} + 1)
+    term1 = exp(-π * τ * N) * (gc.S_τσ + 1)
 
-    # Second term: |δ| L_G ‖φ‖_2 K_τ exp(-2πτN)(S^(1)_{τ,σ} + S^(1)_{0,σ})
-    term2 = abs(δ) * cc.L_G * phi_norm_2 * Kτ * exp(-2π * τ * N) * (gc.S1_τσ + gc.S1_0σ)
+    # Second term: |δ| L_G ‖φ‖_2 K_τ exp(-πτN)(S^(1)_{τ,σ} + S^(1)_{0,σ})
+    term2 = abs(δ) * cc.L_G * phi_norm_2 * Kτ * exp(-π * τ * N) * (gc.S1_τσ + gc.S1_0σ)
 
     # Mismatch term C_mis(K_2)
     obs = get_observable(prob.coupling)
@@ -305,9 +279,16 @@ function compute_jacobian_error(
             cc.L_Gp * phi_norm_2 * gc.S1_0σ * K2^2
         ) + abs(δ)^2 * cc.L_G * cc.Lip_G * phi_norm_2 * phi_norm_Aτ * gc.S2_0σ * K2^2
     end
-    term3 = exp(-2π * τ * N) * C_mis
+    term3 = exp(-π * τ * N) * C_mis
 
-    return term1 + term2 + term3
+    term_map = 0.0
+    if !(prob.map_params === nothing)
+        C_J, _ = periodized_gaussian_derivative_norms(prob.noise.σ)
+        map_sup_error = bound_map_sup_error(prob.map_params)
+        term_map = C_J * map_sup_error
+    end
+
+    return term1 + term2 + term3 + term_map
 end
 
 #=============================================================================
@@ -356,6 +337,7 @@ struct RigorousResult
     residual_bounds::ResidualBounds
 end
 
+
 """
     verify_fixed_point(prob, fhat; τ=0.01, verbose=false)
 
@@ -387,10 +369,11 @@ function verify_fixed_point(
     end
 
     # 3. Observable norms (for CosineObservable: ‖φ‖_2 = 1/√2, ‖φ‖_{A_τ} depends on τ)
+    # Use rigorous upper bounds from rigorous_constants.jl
     obs = get_observable(prob.coupling)
     if obs isa CosineObservable
-        phi_norm_2 = 1 / sqrt(2)
-        phi_norm_Aτ = sqrt(0.5 * exp(4π * τ) + 0.5 * exp(4π * τ))  # modes ±1
+        phi_norm_2 = cosine_observable_L2_norm_rigorous()
+        phi_norm_Aτ = sup(exp(pi_interval() * interval(τ)))  # modes ±1, rigorous upper bound
     else
         error("Observable norm computation not implemented for this type")
     end
@@ -456,11 +439,14 @@ function verify_fixed_point(
         return RigorousResult(false, M_N, ε_J, M, rb.Δ, γ, h, Inf, rb)
     end
 
-    # 10. Error radius
+    # 10. Error radius (use IntervalArithmetic to enclose rounding and take sup)
     if γ == 0
-        r = M * rb.Δ
+        r = IntervalArithmetic.sup(interval(M) * interval(rb.Δ))
     else
-        r = (1 - sqrt(1 - 2h)) / (M * γ)
+        h_int = interval(M)^2 * interval(γ) * interval(rb.Δ)
+        denom_int = interval(M) * interval(γ)
+        r_int = (2 * h_int) / (denom_int * (1 + IntervalArithmetic.sqrt(1 - 2 * h_int)))
+        r = IntervalArithmetic.sup(r_int)
     end
     if verbose
         @info "Verified! Error radius" r

@@ -246,18 +246,6 @@ function build_tapered_map_samples(T_func, Tp_func, M::Int;
 end
 
 """
-    QuadraticMap
-
-Represents the quadratic map T(x) = a - (a+1)x² on [-1,1].
-"""
-struct QuadraticMap
-    a::Float64
-end
-
-(T::QuadraticMap)(x) = T.a - (T.a + 1) * x^2
-derivative(T::QuadraticMap, x) = -2 * (T.a + 1) * x
-
-"""
     build_tapered_quadratic(a, M; K, L=5)
 
 Convenience function to build tapered samples for the quadratic map.
@@ -274,4 +262,4 @@ export smoothstep, smoothstep_quintic, smoothstep_septic
 export taper_window
 export taper_derivative_samples!, integrate_derivative_fft
 export build_tapered_map_samples, build_tapered_quadratic
-export QuadraticMap, derivative
+export derivative

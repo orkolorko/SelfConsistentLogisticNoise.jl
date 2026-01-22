@@ -15,19 +15,19 @@ The Jacobian has the form (Lemma 14):
     DT(f) = A(c) + b ⊗ a*
 
 where:
-- A(c)_{k,m} = ρ̂_σ(k) e^{-2πikc} B_{k,m}  (linearized transfer operator)
+- A(c)_{k,m} = ρ̂_σ(k) e^{-iπkc} B_{k,m}  (linearized transfer operator)
 - a = δ G'(m(f)) Φ̂  (derivative of shift w.r.t. f)
-- b = B(c) f̂  where B(c)_{k,m} = (-2πik) ρ̂_σ(k) e^{-2πikc} B_{k,m}
+- b = B(c) f̂  where B(c)_{k,m} = (-iπk) ρ̂_σ(k) e^{-iπkc} B_{k,m}
 """
 function compute_DT_matrix(prob::SCProblem, fhat::Vector{ComplexF64})
     N = prob.disc.N
     c = compute_shift(prob.coupling, fhat, N)
 
-    # A(c)_{k,m} = ρ̂_σ(k) e^{-2πikc} B_{k,m}
+    # A(c)_{k,m} = ρ̂_σ(k) e^{-iπkc} B_{k,m}
     A = zeros(ComplexF64, 2N + 1, 2N + 1)
     for k in modes(N)
         k_idx = idx(k, N)
-        factor = rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        factor = rhohat(prob.noise, k) * exp(-π * im * k * c)
         for m in modes(N)
             m_idx = idx(m, N)
             A[k_idx, m_idx] = factor * prob.B[k_idx, m_idx]
@@ -42,23 +42,23 @@ function compute_DT_matrix(prob::SCProblem, fhat::Vector{ComplexF64})
 
     a = zeros(ComplexF64, 2N + 1)
     if obs isa CosineObservable
-        # Φ(x) = cos(2πx) => Φ̂_1 = Φ̂_{-1} = 1/2
+        # Φ(x) = cos(πx) => Φ̂_1 = Φ̂_{-1} = 1/2
         a[idx(1, N)] = 0.5 * Gp
         a[idx(-1, N)] = 0.5 * Gp
     elseif obs isa SineObservable
-        # Φ(x) = sin(2πx) => Φ̂_1 = -i/2, Φ̂_{-1} = i/2
+        # Φ(x) = sin(πx) => Φ̂_1 = -i/2, Φ̂_{-1} = i/2
         a[idx(1, N)] = -0.5im * Gp
         a[idx(-1, N)] = 0.5im * Gp
     else
         error("Observable type not supported for Newton solver")
     end
 
-    # b = B(c) f̂  where B(c)_{k,m} = (-2πik) ρ̂_σ(k) e^{-2πikc} B_{k,m}
+    # b = B(c) f̂  where B(c)_{k,m} = (-iπk) ρ̂_σ(k) e^{-iπkc} B_{k,m}
     Bf = prob.B * fhat
     b = zeros(ComplexF64, 2N + 1)
     for k in modes(N)
         k_idx = idx(k, N)
-        factor = (-2π * im * k) * rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        factor = (-π * im * k) * rhohat(prob.noise, k) * exp(-π * im * k * c)
         b[k_idx] = factor * Bf[k_idx]
     end
 

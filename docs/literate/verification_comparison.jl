@@ -18,9 +18,21 @@
 # T(f) = P_{c(f)} f
 # ```
 # where:
-# - $P_c$ is the transfer operator for the noisy logistic map shifted by $c$
+# - $P_c$ is the transfer operator for the noisy quadratic map shifted by $c$
 # - $c(f) = \delta G(m(f))$ is the self-consistent shift
 # - $m(f) = \langle \phi, f \rangle$ is the observable
+#
+# Here:
+# - $m(f)$ is a scalar functional (the observable). In the default cosine case,
+#   $\phi(x) = \cos(\pi x)$ and $m(f)$ is the first cosine Fourier coefficient
+#   (equivalently, $\langle \phi, f \rangle$ on the period-2 torus).
+# - $G$ is the coupling nonlinearity. For `coupling_type = :linear`, we use
+#   $G(m) = m$ so $c(f) = \delta m(f)$. For `:tanh`, the model uses
+#   $G(m) = \tanh(\beta m)$ with slope $\beta$.
+# - The dynamics is the noisy quadratic map on the period-2 torus,
+#   $x \mapsto T_a(x) + c(f)$ with $T_a(x) = a - (a+1)x^2$, followed by Gaussian
+#   noise of width $\sigma$. Here $a$ is the parameter for the $[-1, 1]$
+#   quadratic map, not the logistic map $a x(1-x)$ on $[0,1]$.
 #
 # ### Newton-Kantorovich Approach
 #
@@ -56,19 +68,26 @@ using Printf
 # ## Step 1: Define the Problem
 
 # Physical parameters
-a = 3.83          # Logistic map parameter
+a = 0.915         # Quadratic map parameter on [-1, 1]
 σ = 0.02          # Noise width
 δ = 0.1           # Coupling strength
-N = 128            # Fourier truncation
+N_candidates = [128, 192, 256, 384, 512, 768, 1024]
+η = 0.0025
+σ_sm = 0.0075
+use_taper = false
+M_override = 1048576
 
 println("="^70)
 println("SELF-CONSISTENT FIXED POINT VERIFICATION")
 println("="^70)
 println("\nProblem Parameters:")
-println("  a = $a (logistic map)")
+println("  a = $a (quadratic map)")
 println("  σ = $σ (noise width)")
 println("  δ = $δ (coupling strength)")
-println("  N = $N (Fourier modes)")
+println("  N candidates = $(N_candidates) (Fourier modes)")
+println("  η = $η (taper width)")
+println("  σ_sm = $σ_sm (smoothing width)")
+println("  taper = $use_taper, M = $M_override")
 
 # ## Step 2: Compute Numerical Fixed Point
 
@@ -76,19 +95,42 @@ println("\n" * "-"^70)
 println("Step 1: Computing Numerical Fixed Point")
 println("-"^70)
 
-# Build problem
-prob = build_problem(a=a, σ=σ, N=N, δ=δ, coupling_type=:linear, cache=false)
+prob = nothing
+result = nothing
+fhat = nothing
+used_N = nothing
+for N in N_candidates
+    println("  trying N = $N")
+    global prob = build_problem(
+        a=a, σ=σ, N=N, δ=δ, coupling_type=:linear,
+        η=η, σ_sm=σ_sm, taper=use_taper, M_override=M_override, cache=false
+    )
+    global result = solve_hybrid(prob; α=0.3, picard_tol=1e-6, newton_tol=1e-14, verbose=false)
 
-# Solve using hybrid Picard→Newton method for best accuracy
-result = solve_hybrid(prob; α=0.3, picard_tol=1e-6, newton_tol=1e-14, verbose=false)
+    if !result.converged
+        println("  solver did not converge; continuing")
+        continue
+    end
+
+    cap_try = verify_fixed_point_CAP(prob, result.fhat; τ=0.1, verbose=false)
+    if cap_try.verified
+        global used_N = N
+        global fhat = result.fhat
+        break
+    end
+    println("  CAP not verified at N = $N; continuing")
+end
+
+if used_N === nothing
+    error("No verified fixed point found for any N in N_candidates.")
+end
 
 println("  Solver converged: $(result.converged)")
 println("  Final residual: $(result.residual)")
 println("  Observable m = $(result.m)")
 println("  Iterations: $(result.iterations)")
-
-# Extract candidate
-fhat = result.fhat
+println("  Selected N = $used_N")
+N = prob.disc.N
 
 # ## Step 3: Newton-Kantorovich Verification
 
@@ -111,6 +153,7 @@ println("\nResidual Breakdown:")
 println("  δ_N   = $(nk_result.residual_bounds.δ_N)  (finite-dim residual)")
 println("  e_T   = $(nk_result.residual_bounds.e_T)  (truncation error)")
 println("  e_mis = $(nk_result.residual_bounds.e_mis)  (mismatch error)")
+println("  e_map = $(nk_result.residual_bounds.e_map)  (map approximation error)")
 
 println("\nKantorovich Condition:")
 println("  h = M² γ Δ = $(nk_result.h)")
@@ -205,6 +248,7 @@ cap_result = verify_fixed_point_CAP(prob, fhat; τ=τ_CAP, verbose=false)
 
 println("\nCAP Error Decomposition:")
 println("  Finite-dim error (Krawczyk r): $(cap_result.krawczyk.r)")
+println("  Map shift bound:               $(cap_result.map_shift_bound)")
 println("  Truncation error e_T:          $(cap_result.truncation_error)")
 println("  Total error:                   $(cap_result.total_error)")
 

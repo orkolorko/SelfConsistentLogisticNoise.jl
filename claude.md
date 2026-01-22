@@ -244,7 +244,7 @@ runtests.jl
 ## 7) Public API specification
 
 ### 7.1 Core types
-- `struct LogisticMap; a::Float64; end`
+- `struct QuadraticMap; a::Float64; end`
 - `struct GaussianNoise; σ::Float64; end`
 - `struct FourierDisc; N::Int; M::Int; end`  (M is FFT oversampling grid)
 - `struct Observable; Phihat::Vector{ComplexF64}; end` (or function-based)
@@ -252,7 +252,7 @@ runtests.jl
 - `struct SCProblem; map; noise; disc; coupling; B::Matrix{ComplexF64}; end`
 
 ### 7.2 Core functions
-- `build_B(map::LogisticMap, disc::FourierDisc; cache=true) -> Matrix`
+- `build_B(map::QuadraticMap, disc::FourierDisc; cache=true) -> Matrix`
 - `apply_Pc(prob::SCProblem, fhat::Vector{ComplexF64}, c::Float64) -> Vector`
 - `m(prob, fhat) -> Float64`
 - `solve_fixed_point(prob; α=0.2, tol=1e-12, maxit=5000, init=:uniform, accel=:none) -> Result`

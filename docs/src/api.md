@@ -3,7 +3,7 @@
 ## Core Types
 
 ```@docs
-LogisticMap
+QuadraticMap
 GaussianNoise
 FourierDisc
 SCProblem

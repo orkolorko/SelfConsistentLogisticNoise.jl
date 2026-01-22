@@ -142,14 +142,22 @@ end
 
 Bound on ||T_η - G_σ T_η||_∞ (smoothing error).
 
-Using the second-order bound for Gaussian convolution:
-    ||f - G_σ f||_∞ ≤ (σ²/2) ||f''||_∞
+We take the minimum of the W^{1,∞} and W^{2,∞} bounds from Lemma 7:
+    ||f - G_σ f||_∞ ≤ √(2/π) σ ||f'||_∞,
+    ||f - G_σ f||_∞ ≤ (σ²/2) ||f''||_∞.
 
-So: ||T_η - G_σ T_η||_∞ ≤ (σ_sm²/2) · 2(a+1)(1 + C1/η)
-                        = (a+1) σ_sm² (1 + C1/η)
+For the tapered quadratic map, we use:
+    ||T_η'||_∞ ≤ 2(a+1),
+    ||T_η''||_∞ ≤ 2(a+1)(1 + C1/η).
+
+Uses rigorous interval arithmetic for √(2/π).
 """
 function bound_smoothing_error(a::Real, η::Real, σ_sm::Real, C1::Real)
-    return (a + 1) * σ_sm^2 * (1 + C1 / η)
+    # Use rigorous upper bound for √(2/π)
+    sqrt_2_over_pi = sqrt_2_over_pi_upper()
+    w1 = sqrt_2_over_pi * σ_sm * bound_Tp_sup(a)
+    w2 = 0.5 * σ_sm^2 * bound_second_derivative_taper(a, η, C1)
+    return min(w1, w2)
 end
 
 """
@@ -162,6 +170,20 @@ function bound_smoothing_error(params::MapApproxParams)
 end
 
 """
+    bound_smoothing_error_quadratic_w2(a, σ_sm)
+
+Alternative smoothing bound using the untapered quadratic second derivative.
+
+For T(x) = a - (a+1)x^2, we have ||T''||_∞ = 2(a+1), so:
+    ||T - G_σ T||_∞ ≤ (σ_sm^2/2) * 2(a+1) = (a+1)σ_sm^2.
+
+Note: this ignores taper-induced curvature and is not a rigorous bound for T_η.
+"""
+function bound_smoothing_error_quadratic_w2(a::Real, σ_sm::Real)
+    return (a + 1) * σ_sm^2
+end
+
+"""
     bound_truncation_error(T_eta_sup, σ_sm, N)
 
 Bound on ||G_σ T_η - Π_N G_σ T_η||_∞ (Fourier truncation error after smoothing).
@@ -170,9 +192,34 @@ After Gaussian smoothing, Fourier coefficients decay like exp(-cσ²k²).
 Using Gaussian tail bounds:
 
     ||G_σ T_η - Π_N G_σ T_η||_∞ ≤ (2||T_η||_∞)/(π²σ_sm²N) · exp(-π²σ_sm²N²/2)
+
+Uses rigorous interval arithmetic for π.
 """
 function bound_truncation_error(T_eta_sup::Real, σ_sm::Real, N::Int)
-    return (2 * T_eta_sup) / (π^2 * σ_sm^2 * N) * exp(-π^2 * σ_sm^2 * N^2 / 2)
+    # Use rigorous interval arithmetic for π
+    π_int = pi_interval()
+    σ_int = interval(σ_sm)
+    N_int = interval(N)
+    T_int = interval(T_eta_sup)
+
+    result = (2 * T_int) / (π_int^2 * σ_int^2 * N_int) * exp(-π_int^2 * σ_int^2 * N_int^2 / 2)
+    return sup(result)
+end
+
+"""
+    bound_map_sup_error_quadratic_alt(params::MapApproxParams)
+
+Alternative map approximation bound that uses the untapered quadratic
+second-derivative smoothing estimate.
+
+Note: this is exploratory and not rigorous for tapered maps.
+"""
+function bound_map_sup_error_quadratic_alt(params::MapApproxParams)
+    E_taper = bound_taper_error(params)
+    E_smooth = bound_smoothing_error_quadratic_w2(params.a, params.σ_sm)
+    T_eta_sup = bound_T_eta_sup(params.a, params.η)
+    E_trunc = bound_truncation_error(T_eta_sup, params.σ_sm, params.N)
+    return E_taper + E_smooth + E_trunc
 end
 
 """
@@ -283,6 +330,7 @@ export MapApproxParams, MapApproxError
 export bound_T_sup, bound_Tp_sup, bound_T_eta_sup
 export bound_taper_error, bound_second_derivative_taper
 export bound_smoothing_error, bound_truncation_error
+export bound_smoothing_error_quadratic_w2, bound_map_sup_error_quadratic_alt
 export bound_map_sup_error, compute_map_approx_error
 export print_map_error_summary
 export bound_map_sup_error_interval

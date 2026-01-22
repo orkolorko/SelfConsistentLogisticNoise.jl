@@ -11,18 +11,18 @@ on $\mathbb T$.
 Let the periodized Gaussian on the torus have Fourier coefficients
 
 \[
-\hat\rho_\sigma(k) = \exp(-2\pi^2\sigma^2 k^2), \qquad k\in\mathbb Z.
+\hat\rho_\sigma(k) = \exp(-\tfrac{\pi^2}{2}\sigma^2 k^2), \qquad k\in\mathbb Z.
 \]
 
 The $L^2(\mathbb T)$ norms of the derivatives are given by Parseval:
 
 \[
-\|\rho_\sigma'\|_2^2 = \sum_{k\in\mathbb Z} (2\pi k)^2 |\hat\rho_\sigma(k)|^2
- = \sum_{k\in\mathbb Z} (2\pi k)^2 e^{-4\pi^2\sigma^2 k^2},
+\|\rho_\sigma'\|_2^2 = \sum_{k\in\mathbb Z} (\pi k)^2 |\hat\rho_\sigma(k)|^2
+ = \sum_{k\in\mathbb Z} (\pi k)^2 e^{-\pi^2\sigma^2 k^2},
 \]
 \[
-\|\rho_\sigma''\|_2^2 = \sum_{k\in\mathbb Z} (2\pi k)^4 |\hat\rho_\sigma(k)|^2
- = \sum_{k\in\mathbb Z} (2\pi k)^4 e^{-4\pi^2\sigma^2 k^2}.
+\|\rho_\sigma''\|_2^2 = \sum_{k\in\mathbb Z} (\pi k)^4 |\hat\rho_\sigma(k)|^2
+ = \sum_{k\in\mathbb Z} (\pi k)^4 e^{-\pi^2\sigma^2 k^2}.
 \]
 
 By symmetry this is twice the sum over $k\ge 1$.
@@ -30,14 +30,14 @@ By symmetry this is twice the sum over $k\ge 1$.
 We use a rigorous tail bound based on the ratio test. For $p=2$ or $p=4$, define
 
 \[
-t_k := (2\pi k)^p e^{-4\pi^2\sigma^2 k^2}.
+t_k := (\pi k)^p e^{-\pi^2\sigma^2 k^2}.
 \]
 
 For any $K\ge 1$,
 
 \[
-\frac{t_{k+1}}{t_k} = \Bigl(\frac{k+1}{k}\Bigr)^p \exp\bigl(-4\pi^2\sigma^2(2k+1)\bigr)
-\le \Bigl(\frac{K+1}{K}\Bigr)^p \exp\bigl(-4\pi^2\sigma^2(2K+1)\bigr) =: q.
+\frac{t_{k+1}}{t_k} = \Bigl(\frac{k+1}{k}\Bigr)^p \exp\bigl(-\pi^2\sigma^2(2k+1)\bigr)
+\le \Bigl(\frac{K+1}{K}\Bigr)^p \exp\bigl(-\pi^2\sigma^2(2K+1)\bigr) =: q.
 \]
 
 If $q<1$ then the tail is bounded by a geometric series:

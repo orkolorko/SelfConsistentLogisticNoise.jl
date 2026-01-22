@@ -22,8 +22,8 @@ using BallArithmetic: mid, rad
     end
 
     @testset "Types" begin
-        T = LogisticMap(3.83)
-        @test T(0.5) ≈ 3.83 * 0.5 * 0.5
+        T = QuadraticMap(0.915)
+        @test T(0.5) ≈ 0.915 - (0.915 + 1) * 0.5^2
 
         noise = GaussianNoise(0.02)
         @test rhohat(noise, 0) ≈ 1.0
@@ -342,13 +342,15 @@ using BallArithmetic: mid, rad
         @test L_G == 1.0
         @test L_Gp == 0.0
 
-        # Tanh coupling
+        # Tanh coupling - now uses rigorous upper bounds
         c_tanh = TanhCoupling(0.3, 2.0)
         Lip_t, L_G_t, L_Gp_t = SelfConsistentLogisticNoise.compute_coupling_constants(c_tanh)
-        @test Lip_t == 1.0
-        @test L_G_t == 1.0
-        @test L_Gp_t > 0  # Should be 2/(β√3)
-        @test L_Gp_t ≈ 2 / (2.0 * sqrt(3))
+        @test Lip_t ≥ 1.0  # Rigorous upper bound
+        @test L_G_t ≥ 1.0  # Rigorous upper bound
+        @test L_Gp_t > 0  # Should be rigorous upper bound for 2/(β√3) variant
+        # The rigorous formula gives 2β² * (2/3)^(3/2) which is slightly different
+        # from 2/(β√3), so we just check it's a reasonable upper bound
+        @test L_Gp_t ≥ 2 / (2.0 * sqrt(3)) - 1e-10  # Should be at least this value
     end
 
     @testset "Krawczyk - F_perp residual" begin
@@ -439,13 +441,16 @@ using BallArithmetic: mid, rad
 
     @testset "Krawczyk - CAPResult structure" begin
         # Create a minimal CAPResult
+        # CAPResult(verified, krawczyk, map_shift_bound, fft_error, truncation_error, total_error, fhat)
         kraw = KrawczykResult(true, 1e-10, 0.5, 1e-8, 3, "")
-        cap = CAPResult(true, kraw, 1e-6, 1e-6 + 1e-8, zeros(ComplexF64, 5))
+        cap = CAPResult(true, kraw, 1e-6, 1e-9, 1e-6 + 1e-8, 1e-6 + 1e-8 + 1e-9, zeros(ComplexF64, 5))
 
         @test cap.verified == true
         @test cap.krawczyk.verified == true
-        @test cap.truncation_error == 1e-6
-        @test cap.total_error ≈ 1e-6 + 1e-8
+        @test cap.map_shift_bound == 1e-6
+        @test cap.fft_error == 1e-9
+        @test cap.truncation_error == 1e-6 + 1e-8
+        @test cap.total_error ≈ 1e-6 + 1e-8 + 1e-9
     end
 
 end

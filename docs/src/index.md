@@ -1,6 +1,6 @@
 # SelfConsistentLogisticNoise.jl
 
-A Julia package for computing fixed points of **self-consistent noisy transfer operators** associated with the logistic family.
+A Julia package for computing fixed points of **self-consistent noisy transfer operators** associated with the quadratic family on the period-2 torus.
 
 ## Overview
 
@@ -11,10 +11,10 @@ This package implements numerical methods for finding fixed points of the self-c
 ```
 
 where:
-- ``T_a(x) = a \cdot x(1-x)`` is the logistic map
+- ``T_a(x) = a - (a+1)x^2`` is the quadratic map on ``[-1,1]``
 - ``P_c`` is the noisy transfer operator with periodized Gaussian noise and shift ``c``
 - ``c(f) = \delta \cdot G(m(f))`` is a self-consistent shift depending on the density ``f``
-- ``m(f) = \langle \Phi, f \rangle`` is an observable (e.g., ``\Phi(x) = \cos(2\pi x)``)
+- ``m(f) = \langle \Phi, f \rangle`` is an observable (e.g., ``\Phi(x) = \cos(\pi x)``)
 
 ## Features
 
@@ -28,8 +28,8 @@ where:
 ```julia
 using SelfConsistentLogisticNoise
 
-# Build problem: logistic map with a=3.83, noise σ=0.02, coupling δ=0.1
-prob = build_problem(a=3.83, σ=0.02, N=64, δ=0.1)
+# Build problem: quadratic map with a=0.915, noise σ=0.02, coupling δ=0.1
+prob = build_problem(a=0.915, σ=0.02, N=64, δ=0.1)
 
 # Solve for fixed point
 result = solve_fixed_point(prob; α=0.3, tol=1e-10, verbose=true)

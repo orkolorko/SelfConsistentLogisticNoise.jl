@@ -18,12 +18,21 @@ using LinearAlgebra
 
 Compute m(f) = ⟨Φ, f⟩ for BallArithmetic inputs using range inclusion.
 """
+ball_real(z::Ball) = Ball(real(mid(z)), rad(z))
+ball_imag(z::Ball) = Ball(imag(mid(z)), rad(z))
+function exp_ball(z::Ball{<:AbstractFloat, <:Complex})
+    z_mid = mid(z)
+    r = rad(z)
+    # Mean-value bound: |exp(z) - exp(z_mid)| ≤ exp(|z_mid| + r) * r
+    return Ball(exp(z_mid), exp(abs(z_mid) + r) * r)
+end
+
 function compute_m_ball(obs::CosineObservable, fhat_ball::AbstractVector, N::Int)
-    return real(fhat_ball[idx(1, N)])
+    return ball_real(fhat_ball[idx(1, N)])
 end
 
 function compute_m_ball(obs::SineObservable, fhat_ball::AbstractVector, N::Int)
-    return -imag(fhat_ball[idx(1, N)])
+    return -ball_imag(fhat_ball[idx(1, N)])
 end
 
 function compute_m_ball(obs::FourierObservable, fhat_ball::AbstractVector, N::Int)
@@ -32,7 +41,7 @@ function compute_m_ball(obs::FourierObservable, fhat_ball::AbstractVector, N::In
     for k in modes(min(N, N_phi))
         result += obs.Phihat[idx(k, N_phi)] * conj(fhat_ball[idx(k, N)])
     end
-    return real(result)
+    return ball_real(result)
 end
 
 """
@@ -58,15 +67,16 @@ Compute DT(f) using BallArithmetic inputs for range inclusion.
 """
 function compute_DT_matrix_ball(prob::SCProblem, fhat_ball::AbstractVector)
     N = prob.disc.N
+    # With m(f) as a Ball, BallArithmetic preserves enclosures for m*v and exp(· m(f)).
     c = compute_shift_ball(prob.coupling, fhat_ball, N)
 
     A = Matrix{eltype(fhat_ball)}(undef, 2N + 1, 2N + 1)
     for k in modes(N)
         k_idx = idx(k, N)
-        factor = rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        factor = Ball(rhohat(prob.noise, k)) * exp_ball(-π * im * k * c)
         for m in modes(N)
             m_idx = idx(m, N)
-            A[k_idx, m_idx] = factor * prob.B[k_idx, m_idx]
+            A[k_idx, m_idx] = factor * Ball(prob.B[k_idx, m_idx])
         end
     end
 
@@ -96,7 +106,7 @@ function compute_DT_matrix_ball(prob::SCProblem, fhat_ball::AbstractVector)
         acc = zero(eltype(fhat_ball))
         for m in modes(N)
             m_idx = idx(m, N)
-            acc += prob.B[k_idx, m_idx] * fhat_ball[m_idx]
+            acc += Ball(prob.B[k_idx, m_idx]) * fhat_ball[m_idx]
         end
         Bf[k_idx] = acc
     end
@@ -104,7 +114,7 @@ function compute_DT_matrix_ball(prob::SCProblem, fhat_ball::AbstractVector)
     b = zeros(eltype(fhat_ball), 2N + 1)
     for k in modes(N)
         k_idx = idx(k, N)
-        factor = (-2π * im * k) * rhohat(prob.noise, k) * exp(-2π * im * k * c)
+        factor = (-π * im * k) * Ball(rhohat(prob.noise, k)) * exp_ball(-π * im * k * c)
         b[k_idx] = factor * Bf[k_idx]
     end
 
@@ -135,7 +145,8 @@ function embed_perp(u_perp::AbstractVector, N::Int)
     @assert length(u_perp) == 2N "u_perp must have length 2N"
 
     T = eltype(u_perp)
-    u_full = zeros(T, 2N + 1)
+    u_full = Vector{T}(undef, 2N + 1)
+    fill!(u_full, zero(T))
 
     # Modes k = -N, ..., -1 go to indices 1, ..., N
     u_full[1:N] = u_perp[1:N]
@@ -155,7 +166,8 @@ function project_perp(u_full::AbstractVector, N::Int)
     @assert length(u_full) == 2N + 1 "u_full must have length 2N+1"
 
     T = eltype(u_full)
-    u_perp = zeros(T, 2N)
+    u_perp = Vector{T}(undef, 2N)
+    fill!(u_perp, zero(T))
 
     # Modes k = -N, ..., -1 from indices 1, ..., N
     u_perp[1:N] = u_full[1:N]
@@ -429,50 +441,28 @@ end
 Compute rigorous upper bounds for the L2 norms of the derivatives of the
 periodized Gaussian kernel on the torus:
 
-    ||ρ'_σ||_2^2 = Σ_{k∈ℤ} (2πk)^2 exp(-4π²σ²k²)
-    ||ρ''_σ||_2^2 = Σ_{k∈ℤ} (2πk)^4 exp(-4π²σ²k²)
+    ||ρ'_σ||_2^2 = Σ_{k∈ℤ} (πk)^2 exp(-π²σ²k²)
+    ||ρ''_σ||_2^2 = Σ_{k∈ℤ} (πk)^4 exp(-π²σ²k²)
 
 The series are split into a finite sum and a geometric tail bound using the
-ratio at k = K. Returns (C_J, C_J_2).
+ratio at k = K. Returns (C_J, C_J_2) as rigorous upper bounds using interval
+arithmetic.
 """
 function periodized_gaussian_derivative_norms(σ::Real; K_start::Int=1, K_max::Int=10_000)
-    σ <= 0 && error("σ must be positive")
-    a = 4 * π^2 * σ^2
-
-    function tail_bound(p::Int)
-        K = K_start
-        while K <= K_max
-            ratio = ((K + 1) / K)^p * exp(-a * (2K + 1))
-            if ratio < 1
-                term_K = (2π * K)^p * exp(-a * K^2)
-                return K, term_K / (1 - ratio)
-            end
-            K += 1
-        end
-        error("Failed to find tail bound with ratio < 1 up to K_max=$K_max")
-    end
-
-    function series_with_tail(p::Int)
-        K, tail = tail_bound(p)
-        finite = sum((2π * k)^p * exp(-a * k^2) for k in 1:K-1)
-        return 2 * (finite + tail)
-    end
-
-    C_J = sqrt(series_with_tail(2))
-    C_J_2 = sqrt(series_with_tail(4))
-
-    return C_J, C_J_2
+    # Use the rigorous version from rigorous_constants.jl
+    return periodized_gaussian_derivative_norms_rigorous(σ; K_start=K_start, K_max=K_max)
 end
 
 """
     compute_observable_L2_norm(obs::Observable, N)
 
-Compute ||φ||_2 for the observable.
+Compute ||φ||_2 for the observable. Returns a rigorous upper bound.
 """
 function compute_observable_L2_norm(obs::CosineObservable, N::Int)
-    # φ(x) = cos(2πx) = (e^{2πix} + e^{-2πix})/2
+    # φ(x) = cos(πx) = (e^{iπx} + e^{-iπx})/2
     # ||φ||_2 = 1/√2 (on the torus)
-    return 1 / sqrt(2)
+    # Use rigorous upper bound from rigorous_constants.jl
+    return cosine_observable_L2_norm_rigorous()
 end
 
 """
@@ -489,8 +479,9 @@ function compute_coupling_constants(c::TanhCoupling)
     # G(m) = β tanh(m/β), so G'(m) = sech²(m/β)
     # ||G'||_∞ = 1 (at m=0)
     # Lip(G') = max |G''| = max |−2 sech²(x) tanh(x) / β| ≤ 2/(β√3) at tanh(x)=1/√3
-    β = c.β
-    return (1.0, 1.0, 2 / (β * sqrt(3)))
+    # Use rigorous constants from rigorous_constants.jl
+    cc = compute_tanh_coupling_constants_rigorous(c.β)
+    return (cc.Lip_G, cc.L_G, cc.L_Gp)
 end
 
 # ============================================================================
@@ -680,6 +671,8 @@ Complete CAP verification result.
 # Fields
 - `verified`: Overall verification success
 - `krawczyk`: Krawczyk result for finite-dimensional part
+- `map_shift_bound`: Map approximation perturbation bound
+- `fft_error`: FFT aliasing error bound from sampling size M
 - `truncation_error`: Truncation error bound
 - `total_error`: Total error bound on fixed point
 - `fhat`: Verified fixed point (midpoint)
@@ -687,6 +680,8 @@ Complete CAP verification result.
 struct CAPResult
     verified::Bool
     krawczyk::KrawczykResult
+    map_shift_bound::Float64
+    fft_error::Float64
     truncation_error::Float64
     total_error::Float64
     fhat::Vector{ComplexF64}
@@ -734,7 +729,7 @@ function verify_fixed_point_CAP(prob::SCProblem, fhat::Vector{ComplexF64};
         if verbose
             println("Krawczyk verification FAILED: $(kraw.reason)")
         end
-        return CAPResult(false, kraw, Inf, Inf, fhat)
+        return CAPResult(false, kraw, Inf, Inf, Inf, Inf, fhat)
     end
 
     if verbose
@@ -742,9 +737,25 @@ function verify_fixed_point_CAP(prob::SCProblem, fhat::Vector{ComplexF64};
         println("  Y = $(kraw.Y), Z = $(kraw.Z), r = $(kraw.r)")
     end
 
-    # Step 2: Truncation error bounds
+    # Step 2: Map-approximation fixed-point shift bound
+    map_shift_bound = 0.0
+    if !(prob.map_params === nothing)
+        # L2 perturbation bound via ||ρ'_σ||_2 * ||T - T̃||_∞.
+        C_J, _ = periodized_gaussian_derivative_norms(σ)
+        map_sup_error = bound_map_sup_error(prob.map_params)
+        map_shift_bound = C_J * map_sup_error
+    end
+
+    # Step 3: FFT aliasing error bound (from sampling size M)
+    alias_bounds = fft_aliasing_bound_matrix(prob.map, prob.disc)
+    fft_error = compute_spectral_norm_bound(Ball.(alias_bounds))
+
+    # Step 4: Truncation error bounds
     if verbose
-        println("\n--- Step 2: Truncation Error Bounds ---")
+        println("\n--- Step 2: Map-Approximation Error Bound ---")
+        println("  Map shift bound: $map_shift_bound")
+        println("  FFT aliasing bound: $fft_error")
+        println("\n--- Step 3: Truncation Error Bounds ---")
     end
 
     # Compute Gaussian smoothing constants
@@ -752,10 +763,10 @@ function verify_fixed_point_CAP(prob::SCProblem, fhat::Vector{ComplexF64};
 
     # Norms of candidate
     K_2 = sqrt(sum(abs2(fhat[i]) for i in 1:2N+1))
-    K_τ = sum(abs(fhat[idx(k, N)]) * exp(2π * τ * abs(k)) for k in -N:N)
+    K_τ = sum(abs(fhat[idx(k, N)]) * exp(π * τ * abs(k)) for k in -N:N)
 
-    # Truncation error: e_T = e^{-2πτN} (S_{τ,σ} + 1) K_τ
-    e_T = exp(-2π * τ * N) * (gc.S_τσ + 1) * K_τ
+    # Truncation error: e_T = e^{-πτN} (S_{τ,σ} + 1) K_τ
+    e_T = exp(-π * τ * N) * (gc.S_τσ + 1) * K_τ
 
     if verbose
         println("  K_2 = $K_2, K_τ = $K_τ")
@@ -763,21 +774,22 @@ function verify_fixed_point_CAP(prob::SCProblem, fhat::Vector{ComplexF64};
         println("  Truncation error e_T = $e_T")
     end
 
-    # Step 3: Total error
+    # Step 5: Total error
     # Finite-dimensional error from Krawczyk
     finite_error = kraw.r
 
-    # Total error combining finite and infinite parts
-    total_error = finite_error + e_T
+    # Total error combining finite, map, and truncation parts
+    total_error = finite_error + map_shift_bound + fft_error + e_T
 
     if verbose
         println("\n--- Final Result ---")
         println("  Finite-dimensional error: $finite_error")
+        println("  FFT aliasing error: $fft_error")
         println("  Truncation error: $e_T")
         println("  Total error: $total_error")
     end
 
-    return CAPResult(true, kraw, e_T, total_error, fhat)
+    return CAPResult(true, kraw, map_shift_bound, fft_error, e_T, total_error, fhat)
 end
 
 """
@@ -806,6 +818,8 @@ function print_CAP_certificate(result::CAPResult)
 
     println("\nError Bounds:")
     println("  Finite-dim error:     $(result.krawczyk.r)")
+    println("  Map shift bound:      $(result.map_shift_bound)")
+    println("  FFT aliasing error:   $(result.fft_error)")
     println("  Truncation error:     $(result.truncation_error)")
     println("  Total error:          $(result.total_error)")
 

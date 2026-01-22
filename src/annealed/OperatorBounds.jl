@@ -21,9 +21,12 @@ For Gaussian noise with width σ_rds:
     ||P_T - P_{T̃}||_{L¹→L¹} ≤ √(2/π) / σ_rds · ||T - T̃||_∞
 
 This uses the Lipschitz property of the Gaussian kernel.
+Uses rigorous interval arithmetic for √(2/π).
 """
 function bound_operator_map_sensitivity(σ_rds::Real, map_sup_error::Real)
-    return sqrt(2 / π) / σ_rds * map_sup_error
+    # Use rigorous upper bound for √(2/π)
+    sqrt_2_over_pi = sqrt_2_over_pi_upper()
+    return sqrt_2_over_pi / σ_rds * map_sup_error
 end
 
 """
@@ -48,13 +51,18 @@ The tail sum gives:
     Σ_{|k|>N} |ρ̂_σ(k)| ≤ C / (σ·N) · exp(-π²σ²N²/2)
 
 with C ≈ √(2/π).
+Uses rigorous interval arithmetic.
 """
 function bound_projection_tail_L1(σ_rds::Real, N::Int)
-    # Gaussian tail integral bound
+    # Gaussian tail integral bound with rigorous arithmetic
     # ∫_N^∞ exp(-π²σ²k²/2) dk ≈ exp(-π²σ²N²/2) / (π²σ²N)
     # Sum is bounded by 2× the integral (symmetric)
-    tail = 2 * exp(-π^2 * σ_rds^2 * N^2 / 2) / (π^2 * σ_rds^2 * N)
-    return tail
+    π_int = pi_interval()
+    σ_int = interval(σ_rds)
+    N_int = interval(N)
+
+    tail = 2 * exp(-π_int^2 * σ_int^2 * N_int^2 / 2) / (π_int^2 * σ_int^2 * N_int)
+    return sup(tail)
 end
 
 """
@@ -63,12 +71,18 @@ end
 Bound on projection error in L² norm.
 
 ||( I - Π_N) P_{T̃} f||₂ ≤ (Σ_{|k|>N} |ρ̂_σ(k)|²)^{1/2} ||f||₂
+
+Uses rigorous interval arithmetic.
 """
 function bound_projection_tail_L2(σ_rds::Real, N::Int)
-    # Sum of squares of Gaussian multipliers
+    # Sum of squares of Gaussian multipliers with rigorous arithmetic
     # Σ_{|k|>N} exp(-π²σ²k²) ≤ 2 ∫_N^∞ exp(-π²σ²k²) dk
-    tail_sq = 2 * exp(-π^2 * σ_rds^2 * N^2) / (π * σ_rds * sqrt(π) * N)
-    return sqrt(tail_sq)
+    π_int = pi_interval()
+    σ_int = interval(σ_rds)
+    N_int = interval(N)
+
+    tail_sq = 2 * exp(-π_int^2 * σ_int^2 * N_int^2) / (π_int * σ_int * sqrt(π_int) * N_int)
+    return sup(sqrt(tail_sq))
 end
 
 """
@@ -93,28 +107,35 @@ end
 """
     compute_analytic_strip_constants(τ, σ)
 
-Compute the Galatolo-style constants S_{τ,σ}.
+Compute the Galatolo-style constants S_{τ,σ} with rigorous upper bounds.
 
 S_{τ,σ} = sup_{k≥0} exp(2πτk - π²σ²k²/2)
 
 The supremum is achieved at k* = 2τ/(πσ²) where the exponent has derivative 0.
+Uses rigorous interval arithmetic.
 """
 function compute_analytic_strip_constants(τ::Real, σ::Real)
     # Maximum of 2πτk - π²σ²k²/2 is at k* = 2τ/(πσ²)
     # Max value = 2πτ · 2τ/(πσ²) - π²σ²/2 · (2τ/(πσ²))² = 2τ²/σ²
+    π_int = pi_interval()
+    τ_int = interval(τ)
+    σ_int = interval(σ)
 
-    k_star = 2 * τ / (π * σ^2)
-    S_τσ = exp(2 * τ^2 / σ^2)
+    k_star_int = 2 * τ_int / (π_int * σ_int^2)
+    S_τσ_int = exp(2 * τ_int^2 / σ_int^2)
+
+    k_star = sup(k_star_int)
+    S_τσ = sup(S_τσ_int)
 
     # For derivatives, the factor k^n modifies the optimization
     # S^(1) = sup_k |k| exp(2πτ|k| - π²σ²k²/2)
     # This requires solving d/dk[k exp(...)] = 0
 
     # Approximate: k* shifts slightly, but dominant term is still exp(2τ²/σ²) × k*
-    S_τσ_1 = k_star * S_τσ
+    S_τσ_1 = sup(k_star_int * S_τσ_int)
 
     # S^(2) ≈ k*² × S_τσ
-    S_τσ_2 = k_star^2 * S_τσ
+    S_τσ_2 = sup(k_star_int^2 * S_τσ_int)
 
     return AnalyticStripConstants(τ, σ, S_τσ, S_τσ_1, S_τσ_2)
 end
@@ -125,9 +146,14 @@ end
 Bound on ||(I - Π_N)f||₂ for f ∈ A_τ.
 
 ||(I - Π_N)f||₂ ≤ e^{-2πτN} ||f||_{A_τ}
+
+Uses rigorous interval arithmetic.
 """
 function bound_analytic_to_L2_projection(τ::Real, N::Int)
-    return exp(-2 * π * τ * N)
+    π_int = pi_interval()
+    τ_int = interval(τ)
+    N_int = interval(N)
+    return sup(exp(-2 * π_int * τ_int * N_int))
 end
 
 """
@@ -257,18 +283,24 @@ end
 
 BigFloat version of operator assembly for precision comparison.
 Uses naive DFT instead of FFTW (which doesn't support BigFloat).
+
+Note: Uses setprecision to compute π at the current BigFloat precision,
+which gives a rigorous approximation at that precision level.
 """
 function assemble_PN_fft_bigfloat(Ttilde_samples::Vector{BigFloat}, N::Int, σ_rds::BigFloat)
     M = length(Ttilde_samples)
     dim = 2N + 1
     P = zeros(Complex{BigFloat}, dim, dim)
 
+    # Compute π at current BigFloat precision (this is rigorous at that precision)
+    π_big = BigFloat(π)
+
     # Precompute twiddle factors for DFT
-    ω = exp(-2 * BigFloat(π) * im / M)
+    ω = exp(-2 * π_big * im / M)
 
     for k in -N:N
         # Compute g_k samples: exp(-iπk T̃(y))
-        gk = exp.(-im * BigFloat(π) * k .* Ttilde_samples)
+        gk = exp.(-im * π_big * k .* Ttilde_samples)
 
         # Naive DFT for g_k
         gk_hat = zeros(Complex{BigFloat}, M)
@@ -279,7 +311,7 @@ function assemble_PN_fft_bigfloat(Ttilde_samples::Vector{BigFloat}, N::Int, σ_r
         end
 
         # Extract modes and multiply by noise coefficient
-        rho_k = exp(-BigFloat(π)^2 * σ_rds^2 * k^2 / 2)
+        rho_k = exp(-π_big^2 * σ_rds^2 * k^2 / 2)
         row_idx = k + N + 1
 
         for ℓ in -N:N

@@ -4,22 +4,22 @@
 
 ### State Space
 
-We work on the torus ``\mathbb{T} = \mathbb{R}/\mathbb{Z}``, represented as ``[0,1)`` with wrap-around.
+We work on the period-2 torus ``\mathbb{T} = \mathbb{R}/(2\mathbb{Z})``, represented as ``[-1,1)`` with wrap-around.
 
-### The Logistic Map
+### The Quadratic Map
 
 ```math
-T_a(x) = a \cdot x(1-x)
+T_a(x) = a - (a+1)x^2
 ```
 
-We interpret all phases in ``\mathbb{T}`` (mod 1) when combining with noise and shift.
+We interpret all phases in ``\mathbb{T}`` (mod 2) when combining with noise and shift.
 
 ### Periodized Gaussian Noise
 
 Let ``\bar{\rho}_\sigma`` be the periodized Gaussian kernel on ``\mathbb{T}``. Its Fourier coefficients are:
 
 ```math
-\widehat{\bar{\rho}_\sigma}(k) = \exp(-2\pi^2 \sigma^2 k^2)
+\widehat{\bar{\rho}_\sigma}(k) = \exp(-\tfrac{\pi^2}{2} \sigma^2 k^2)
 ```
 
 ### Noisy Transfer Operator with Shift

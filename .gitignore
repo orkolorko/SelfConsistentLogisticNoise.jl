@@ -25,5 +25,11 @@ Thumbs.db
 results/*.jld2
 results/*.csv
 
+# Plots
+*.png
+
+# Binary snapshots
+*.bin
+
 # Local environment
 .envrc
