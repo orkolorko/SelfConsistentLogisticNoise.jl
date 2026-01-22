@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Noise Variance Sweep · SelfConsistentLogisticNoise.jl</title><meta name="title" content="Noise Variance Sweep · SelfConsistentLogisticNoise.jl"/><meta property="og:title" content="Noise Variance Sweep · SelfConsistentLogisticNoise.jl"/><meta property="twitter:title" content="Noise Variance Sweep · SelfConsistentLogisticNoise.jl"/><meta name="description" content="Documentation for SelfConsistentLogisticNoise.jl."/><meta property="og:description" content="Documentation for SelfConsistentLogisticNoise.jl."/><meta property="twitter:description" content="Documentation for SelfConsistentLogisticNoise.jl."/><meta property="og:url" content="https://orkolorko.github.io/SelfConsistentLogisticNoise.jl/generated/rigorous_noise_variance_sweep/"/><meta property="twitter:url" content="https://orkolorko.github.io/SelfConsistentLogisticNoise.jl/generated/rigorous_noise_variance_sweep/"/><link rel="canonical" href="https://orkolorko.github.io/SelfConsistentLogisticNoise.jl/generated/rigorous_noise_variance_sweep/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SelfConsistentLogisticNoise.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../theory/">Mathematical Background</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../rigorous_delta_sweep/">Delta Sweep</a></li><li class="is-active"><a class="tocitem" href>Noise Variance Sweep</a><ul class="internal"><li><a class="tocitem" href="#Configuration"><span>Configuration</span></a></li><li><a class="tocitem" href="#Helper"><span>Helper</span></a></li><li><a class="tocitem" href="#Sweep-and-Plot"><span>Sweep and Plot</span></a></li></ul></li><li><a class="tocitem" href="../rigorous_a_sweep_sigma2_1e4/">a Sweep</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Noise Variance Sweep</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Noise Variance Sweep</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/orkolorko/SelfConsistentLogisticNoise.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/orkolorko/SelfConsistentLogisticNoise.jl/blob/main/docs/src/generated/rigorous_noise_variance_sweep.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Rigorous-Noise-Variance-Sweep-(δ-0)"><a class="docs-heading-anchor" href="#Rigorous-Noise-Variance-Sweep-(δ-0)">Rigorous Noise-Variance Sweep (δ = 0)</a><a id="Rigorous-Noise-Variance-Sweep-(δ-0)-1"></a><a class="docs-heading-anchor-permalink" href="#Rigorous-Noise-Variance-Sweep-(δ-0)" title="Permalink"></a></h1><p>This tutorial performs a sanity-check sweep over the noise variance (σ²) while keeping the coupling fixed at δ = 0. We only retain fixed points whose rigorous L2 error bound is below a target threshold.</p><pre><code class="language-julia hljs">using SelfConsistentLogisticNoise
+using Plots
+using Printf
+using Serialization
+
+include(joinpath(@__DIR__, &quot;cert_log.jl&quot;))</code></pre><h2 id="Configuration"><a class="docs-heading-anchor" href="#Configuration">Configuration</a><a id="Configuration-1"></a><a class="docs-heading-anchor-permalink" href="#Configuration" title="Permalink"></a></h2><pre><code class="language-julia hljs">a = 0.915         # Quadratic map parameter on [-1, 1]
+δ = 0.0           # No coupling for this sweep
+N_candidates = [128, 192, 256, 384, 512, 768, 1024]
+η = 0.0025
+σ_sm = 0.0075
+use_taper = false
+M_override = 1048576
+τ_CAP = 0.1       # Analyticity strip for truncation bounds
+cache_dir = &quot;.cache&quot;
+precompute_B = true
+write_markdown_summary = true
+write_latex_summary = false</code></pre><p>Sweep over variance: σ² in [0.0001, 0.0025] corresponds to σ in [0.01, 0.05]</p><pre><code class="language-julia hljs">var_range = 0.0001:0.0001:0.0025
+error_threshold = 0.1
+
+npts = 1000
+output_dir = joinpath(&quot;docs&quot;, &quot;literate&quot;, &quot;rigorous_noise_variance_sweep_png&quot;)
+mkpath(output_dir)
+snapshot_a = joinpath(output_dir, &quot;sweep_snapshot_A.bin&quot;)
+snapshot_b = joinpath(output_dir, &quot;sweep_snapshot_B.bin&quot;)
+log_path = joinpath(output_dir, &quot;certification_log.md&quot;)
+jld2_path = joinpath(output_dir, &quot;certification_output.jld2&quot;)
+latex_path = joinpath(output_dir, &quot;certification_summary_noise_variance_sweep.tex&quot;)
+
+config = Dict(
+    :script =&gt; &quot;rigorous_noise_variance_sweep&quot;,
+    :a =&gt; a,
+    :δ =&gt; δ,
+    :N_candidates =&gt; N_candidates,
+    :η =&gt; η,
+    :σ_sm =&gt; σ_sm,
+    :use_taper =&gt; use_taper,
+    :M_override =&gt; M_override,
+    :τ_CAP =&gt; τ_CAP,
+    :var_range =&gt; collect(var_range),
+    :error_threshold =&gt; error_threshold,
+    :npts =&gt; npts,
+    :log_path =&gt; log_path,
+    :jld2_path =&gt; jld2_path,
+)
+
+function load_snapshot(config, path_a, path_b)
+    paths = filter(isfile, (path_a, path_b))
+    if isempty(paths)
+        return Dict{Float64, NamedTuple}(), Dict{Float64, NamedTuple}()
+    end
+    mtimes = map(p -&gt; stat(p).mtime, paths)
+    latest_path = paths[argmax(mtimes)]
+    state = try
+        deserialize(latest_path)
+    catch err
+        println(&quot;Snapshot load failed ($(err)); ignoring saved state.&quot;)
+        return Dict{Float64, NamedTuple}(), Dict{Float64, NamedTuple}()
+    end
+    if get(state, :config, nothing) != config
+        println(&quot;Snapshot config mismatch; ignoring saved state.&quot;)
+        return Dict{Float64, NamedTuple}(), Dict{Float64, NamedTuple}()
+    end
+    return state[:verified], state[:records]
+end
+
+function save_snapshot!(config, verified, records, path_a, path_b, toggle_ref)
+    state = Dict(
+        :config =&gt; config,
+        :verified =&gt; verified,
+        :records =&gt; records,
+        :timestamp =&gt; time(),
+    )
+    path = toggle_ref[] ? path_a : path_b
+    serialize(path, state)
+    toggle_ref[] = !toggle_ref[]
+end
+
+println(&quot;=&quot;^70)
+println(&quot;RIGOROUS NOISE-VARIANCE SWEEP (δ = 0)&quot;)
+println(&quot;=&quot;^70)
+println(&quot;a = $a, N candidates = $(N_candidates), τ = $τ_CAP, δ = $δ&quot;)
+println(&quot;η = $η (taper width)&quot;)
+println(&quot;σ_sm = $σ_sm (smoothing width)&quot;)
+println(&quot;taper = $use_taper, M = $M_override&quot;)
+println(&quot;variance range = $(first(var_range)) to $(last(var_range)) (step = $(step(var_range)))&quot;)
+println(&quot;L2 error threshold = $error_threshold&quot;)</code></pre><h2 id="Helper"><a class="docs-heading-anchor" href="#Helper">Helper</a><a id="Helper-1"></a><a class="docs-heading-anchor-permalink" href="#Helper" title="Permalink"></a></h2><pre><code class="language-julia hljs">function compute_verified_density(prob::SCProblem, fhat::Vector{ComplexF64}, σ::Float64)
+    cap = verify_fixed_point_CAP(prob, fhat; τ=τ_CAP, verbose=false)
+    if cap.verified &amp;&amp; cap.total_error &lt;= error_threshold
+        xgrid, fvals = reconstruct_density(fhat; npts=npts)
+        return (xgrid=xgrid, fvals=fvals, cap=cap, σ=σ), cap
+    end
+    return nothing, cap
+end</code></pre><h2 id="Sweep-and-Plot"><a class="docs-heading-anchor" href="#Sweep-and-Plot">Sweep and Plot</a><a id="Sweep-and-Plot-1"></a><a class="docs-heading-anchor-permalink" href="#Sweep-and-Plot" title="Permalink"></a></h2><pre><code class="language-julia hljs">verified, records = load_snapshot(config, snapshot_a, snapshot_b)
+if !isempty(verified) || !isempty(records)
+    println(&quot;Loaded snapshot with $(length(records)) recorded points.&quot;)
+end
+snapshot_toggle = Ref(true)
+verified = copy(verified)
+records = copy(records)
+
+if precompute_B
+    println(&quot;\nPrecomputing B matrices for all N (cached)...&quot;)
+    pre_start = time()
+    map = QuadraticMap(a)
+    for N in N_candidates
+        disc = isnothing(M_override) ? FourierDisc(N) : FourierDisc(N, M_override)
+        build_B(map, disc; cache=true, cache_dir=cache_dir, η=η, σ_sm=σ_sm, taper=use_taper)
+    end
+    @printf(&quot;Precompute time: %.2f s\n&quot;, time() - pre_start)
+end
+
+println(&quot;\nRunning sweep...&quot;)
+for var in var_range
+    if haskey(records, var)
+        @printf(&quot;\nσ² = %.4e (skipping; already recorded)\n&quot;, var)
+        continue
+    end
+    σ = sqrt(var)
+    @printf(&quot;\nσ² = %.4e (σ = %.4e)\n&quot;, var, σ)
+
+    verified_entry = nothing
+    cap = nothing
+    used_N = nothing
+    for N in N_candidates
+        @printf(&quot;  trying N = %d\n&quot;, N)
+        prob = build_problem(
+            a=a, σ=σ, N=N, δ=δ, coupling_type=:linear,
+            η=η, σ_sm=σ_sm, taper=use_taper, M_override=M_override, cache=true
+        )
+        result = solve_hybrid(prob; α=0.3, picard_tol=1e-6, newton_tol=1e-14, verbose=false)
+
+        if !result.converged
+            println(&quot;    solver did not converge; continuing&quot;)
+            continue
+        end
+
+        verified_entry, cap = compute_verified_density(prob, result.fhat, σ)
+        if verified_entry !== nothing
+            used_N = N
+            break
+        end
+        println(&quot;    not verified or error too large: total_error = $(cap.total_error)&quot;)
+    end
+
+    if verified_entry === nothing
+        println(&quot;  no certified result for this variance&quot;)
+        records[var] = (
+            verified=false,
+            used_N=used_N,
+            total_error=cap === nothing ? nothing : cap.total_error,
+            cap=cap,
+            xgrid=nothing,
+            fvals=nothing,
+            σ=σ,
+        )
+        save_snapshot!(config, verified, records, snapshot_a, snapshot_b, snapshot_toggle)
+        continue
+    end
+
+    verified[var] = verified_entry
+    records[var] = (
+        verified=true,
+        used_N=used_N,
+        total_error=cap === nothing ? nothing : cap.total_error,
+        cap=cap,
+        xgrid=verified_entry.xgrid,
+        fvals=verified_entry.fvals,
+        σ=σ,
+    )
+    save_snapshot!(config, verified, records, snapshot_a, snapshot_b, snapshot_toggle)
+    @printf(&quot;  verified at N = %d: total_error = %.6e\n&quot;, used_N, cap.total_error)
+
+    p = plot(
+        verified_entry.xgrid,
+        verified_entry.fvals;
+        label=false,
+        lw=2,
+        title=@sprintf(&quot;σ² = %.4e (σ = %.3e, N = %d)&quot;, var, σ, used_N),
+        xlabel=&quot;x&quot;,
+        ylabel=&quot;f(x)&quot;,
+        size=(800, 400),
+    )
+    savefig(p, joinpath(output_dir, @sprintf(&quot;density_sigma2_%0.4e_N_%d.png&quot;, var, used_N)))
+    display(p)
+end
+
+if write_markdown_summary
+    write_cert_log(
+        log_path;
+        title=&quot;Noise-variance sweep certification log&quot;,
+        key_label=&quot;σ²&quot;,
+        key_format=σ2 -&gt; @sprintf(&quot;%.4e&quot;, σ2),
+        config=config,
+        records=records,
+    )
+end
+save_state_jld2(jld2_path, config, verified, records)
+
+if write_latex_summary
+    fig_path = joinpath(&quot;docs&quot;, &quot;literate&quot;, &quot;rigorous_noise_variance_sweep_png&quot;, &quot;density_comparison_selected.png&quot;)
+    if !isfile(fig_path)
+        println(&quot;Skipping LaTeX summary: missing comparison plot at $fig_path&quot;)
+    else
+        write_latex_summary(
+            latex_path;
+            title=&quot;Noise-variance sweep summary&quot;,
+            key_label=&quot;\\\$\\sigma^2\\\$&quot;,
+            key_values=collect(var_range),
+            key_format=σ2 -&gt; @sprintf(&quot;%.4e&quot;, σ2),
+            records=records,
+            fig_path=fig_path,
+            fig_caption=&quot;Verified stationary densities for selected \\$\\sigma^2\\$ values.&quot;,
+            fig_label=&quot;noise_variance_sweep&quot;,
+        )
+    end
+end</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rigorous_delta_sweep/">« Delta Sweep</a><a class="docs-footer-nextpage" href="../rigorous_a_sweep_sigma2_1e4/">a Sweep »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 22 January 2026 02:08">Thursday 22 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
