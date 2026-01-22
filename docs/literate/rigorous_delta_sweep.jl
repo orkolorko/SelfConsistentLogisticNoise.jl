@@ -40,6 +40,8 @@ M_override = 1048576
 cache_dir = ".cache"
 precompute_B = true
 use_snapshots = false
+write_markdown_summary = true
+write_latex_summary = true
 
 δ_range = 0.0:0.01:0.5
 error_threshold = 0.1
@@ -252,24 +254,28 @@ end
 savefig(p_compare, joinpath(output_dir, "density_comparison_selected.png"))
 display(p_compare)
 
-write_cert_log(
-    log_path;
-    title="Delta sweep certification log",
-    key_label="δ",
-    key_format=δ -> @sprintf("%.2f", δ),
-    config=config,
-    records=records,
-)
+if write_markdown_summary
+    write_cert_log(
+        log_path;
+        title="Delta sweep certification log",
+        key_label="δ",
+        key_format=δ -> @sprintf("%.2f", δ),
+        config=config,
+        records=records,
+    )
+end
 save_state_jld2(jld2_path, config, verified, records)
 
-write_latex_summary(
-    latex_path;
-    title="Rigorous delta sweep summary",
-    key_label="\\\$\\delta\\\$",
-    key_values=collect(0.0:0.05:0.5),
-    key_format=δ -> @sprintf("%.2f", δ),
-    records=records,
-    fig_path=joinpath("docs", "literate", "rigorous_delta_sweep_png", "density_comparison_selected.png"),
-    fig_caption="Verified stationary densities for selected \\\$\\delta\\\$ values.",
-    fig_label="delta_sweep",
-)
+if write_latex_summary
+    write_latex_summary(
+        latex_path;
+        title="Rigorous delta sweep summary",
+        key_label="\\\$\\delta\\\$",
+        key_values=collect(0.0:0.05:0.5),
+        key_format=δ -> @sprintf("%.2f", δ),
+        records=records,
+        fig_path=joinpath("docs", "literate", "rigorous_delta_sweep_png", "density_comparison_selected.png"),
+        fig_caption="Verified stationary densities for selected \\\$\\delta\\\$ values.",
+        fig_label="delta_sweep",
+    )
+end

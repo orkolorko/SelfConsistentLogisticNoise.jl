@@ -22,6 +22,8 @@ N_candidates = [128, 192, 256, 384, 512, 768, 1024]
 use_taper = false
 M_override = 1024
 τ_CAP = 0.1
+write_markdown_summary = true
+write_latex_summary = true
 
 a_range = 0.9:0.001:1.0
 error_threshold = 0.1
@@ -31,6 +33,7 @@ output_dir = joinpath("docs", "literate", "rigorous_a_sweep_sigma2_1e4_png")
 mkpath(output_dir)
 log_path = joinpath(output_dir, "certification_log.md")
 jld2_path = joinpath(output_dir, "certification_output.jld2")
+latex_path = joinpath(output_dir, "certification_summary_a_sweep.tex")
 
 config = Dict(
     :script => "rigorous_a_sweep_sigma2_1e4",
@@ -170,12 +173,28 @@ end
 savefig(p_compare, joinpath(output_dir, "density_comparison_selected.png"))
 display(p_compare)
 
-write_cert_log(
-    log_path;
-    title="a-sweep certification log (σ² = 1e-4)",
-    key_label="a",
-    key_format=a -> @sprintf("%.3f", a),
-    config=config,
-    records=records,
-)
+if write_markdown_summary
+    write_cert_log(
+        log_path;
+        title="a-sweep certification log (σ² = 1e-4)",
+        key_label="a",
+        key_format=a -> @sprintf("%.3f", a),
+        config=config,
+        records=records,
+    )
+end
 save_state_jld2(jld2_path, config, verified, records)
+
+if write_latex_summary
+    write_latex_summary(
+        latex_path;
+        title="a-sweep summary (\\$\\sigma^2=10^{-4}\\$)",
+        key_label="\\\$a\\\$",
+        key_values=collect(range(0.9, 0.99; length=10)),
+        key_format=a -> @sprintf("%.3f", a),
+        records=records,
+        fig_path=joinpath("docs", "literate", "rigorous_a_sweep_sigma2_1e4_png", "density_comparison_selected.png"),
+        fig_caption="Verified stationary densities for selected \\$a\\$ values.",
+        fig_label="a_sweep",
+    )
+end

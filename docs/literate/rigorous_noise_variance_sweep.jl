@@ -23,6 +23,8 @@ M_override = 1048576
 τ_CAP = 0.1       # Analyticity strip for truncation bounds
 cache_dir = ".cache"
 precompute_B = true
+write_markdown_summary = true
+write_latex_summary = false
 
 # Sweep over variance: σ² in [0.0001, 0.0025] corresponds to σ in [0.01, 0.05]
 var_range = 0.0001:0.0001:0.0025
@@ -35,6 +37,7 @@ snapshot_a = joinpath(output_dir, "sweep_snapshot_A.bin")
 snapshot_b = joinpath(output_dir, "sweep_snapshot_B.bin")
 log_path = joinpath(output_dir, "certification_log.md")
 jld2_path = joinpath(output_dir, "certification_output.jld2")
+latex_path = joinpath(output_dir, "certification_summary_noise_variance_sweep.tex")
 
 config = Dict(
     :script => "rigorous_noise_variance_sweep",
@@ -202,12 +205,33 @@ for var in var_range
     display(p)
 end
 
-write_cert_log(
-    log_path;
-    title="Noise-variance sweep certification log",
-    key_label="σ²",
-    key_format=σ2 -> @sprintf("%.4e", σ2),
-    config=config,
-    records=records,
-)
+if write_markdown_summary
+    write_cert_log(
+        log_path;
+        title="Noise-variance sweep certification log",
+        key_label="σ²",
+        key_format=σ2 -> @sprintf("%.4e", σ2),
+        config=config,
+        records=records,
+    )
+end
 save_state_jld2(jld2_path, config, verified, records)
+
+if write_latex_summary
+    fig_path = joinpath("docs", "literate", "rigorous_noise_variance_sweep_png", "density_comparison_selected.png")
+    if !isfile(fig_path)
+        println("Skipping LaTeX summary: missing comparison plot at $fig_path")
+    else
+        write_latex_summary(
+            latex_path;
+            title="Noise-variance sweep summary",
+            key_label="\\\$\\sigma^2\\\$",
+            key_values=collect(var_range),
+            key_format=σ2 -> @sprintf("%.4e", σ2),
+            records=records,
+            fig_path=fig_path,
+            fig_caption="Verified stationary densities for selected \\$\\sigma^2\\$ values.",
+            fig_label="noise_variance_sweep",
+        )
+    end
+end
