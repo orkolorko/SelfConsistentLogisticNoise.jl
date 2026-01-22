@@ -22,8 +22,8 @@ Thumbs.db
 .ipynb_checkpoints/
 
 # Results (keep structure, ignore data)
-results/*.jld2
-results/*.csv
+*.jld2
+*.csv
 
 # Plots
 *.png
